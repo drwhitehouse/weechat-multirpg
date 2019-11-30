@@ -12,9 +12,15 @@ def buffer_close_cb(data, buffer):
     # ...
     return weechat.WEECHAT_RC_OK
 
-def whoami():
-    buffer = weechat.info_get("irc_buffer", "freenode,multirpg")
-    weechat.command(buffer, "whoami")
+def displaybuffer(buffer, msg):
+    weechat.prnt(buffer, msg)
+    return weechat.WEECHAT_RC_OK
+
+def querybot(msg, data):
+    mrpgbotbuffer = weechat.info_get("irc_buffer", "freenode,multirpg")
+    displaybuffer(buffer, data)
+    weechat.command(mrpgbotbuffer, msg)
+    return weechat.WEECHAT_RC_OK
 
 # create buffer
 buffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
@@ -26,9 +32,11 @@ weechat.buffer_set(buffer, "Weechat Multirpg", "This is title for my buffer.")
 weechat.buffer_set(buffer, "localvar_set_no_log", "1")
 
 # start script
-weechat.prnt(buffer, "weechat-multirpg started")
+displaybuffer(buffer, "Starting weechat-multirpg")
 
 # create query buffer
-query_buffer = weechat.info_get("irc_buffer", "freenode,#multirpg")
-weechat.command(query_buffer, "/query multirpg")
-whoami()
+mrpgchanbuffer = weechat.info_get("irc_buffer", "freenode,#multirpg")
+weechat.command(mrpgchanbuffer, "/query multirpg")
+
+# timer test
+weechat.hook_timer(60 * 1000, 60, 0, "querybot", "whoami")
