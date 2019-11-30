@@ -22,11 +22,26 @@ def querybot(msg, data):
     weechat.command(mrpgbotbuffer, msg)
     return weechat.WEECHAT_RC_OK
 
-# create buffer
+#---------------------------------------------------------------------------#
+
+def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
+    displaybuffer(buffer, data)
+    displaybuffer(buffer, bufferp)
+    displaybuffer(buffer, tm)
+    displaybuffer(buffer, tags)
+#   displaybuffer(buffer, display)      # Not strings
+#   displaybuffer(buffer, is_hilight)   # Don't prnt
+    displaybuffer(buffer, prefix)
+    displaybuffer(buffer, msg)
+    return weechat.WEECHAT_RC_OK
+
+#---------------------------------------------------------------------------#
+
+#reate buffer
 buffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
 
 # set title
-weechat.buffer_set(buffer, "Weechat Multirpg", "This is title for my buffer.")
+weechat.buffer_set(buffer, "weechat-multirpg", "This is title for my buffer.")
 
 # disable logging, by setting local variable "no_log" to "1"
 weechat.buffer_set(buffer, "localvar_set_no_log", "1")
@@ -39,4 +54,7 @@ mrpgchanbuffer = weechat.info_get("irc_buffer", "freenode,#multirpg")
 weechat.command(mrpgchanbuffer, "/query multirpg")
 
 # timer test
-weechat.hook_timer(60 * 1000, 60, 0, "querybot", "whoami")
+# weechat.hook_timer(60 * 1000, 60, 0, "querybot", "whoami")
+
+# read test
+weechat.hook_print("mrpgbuffer", "", "", 1, "msgparser", "") # catch prvmsg
