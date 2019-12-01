@@ -70,7 +70,7 @@ botbuffer = weechat.info_get("irc_buffer", "freenode,multirpg")
 
 # read test
 weechat.hook_print("chanbuffer", "", "horseshoecrab", 0, "msgparser", "")
-weechat.hook_print("botbuffer", "notify_private", "", 1, "msgparser", "")
+weechat.hook_print("botbuffer", "notify_private", "", 0, "msgparser", "")
 
 # getting stats
 querybot("whoami")
