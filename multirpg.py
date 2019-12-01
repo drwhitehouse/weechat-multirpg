@@ -37,9 +37,10 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         chunks = msg.split("You can")
         for chunk in chunks:
             displaybuffer(buffer, chunk)
-            digits = [int(s) for s in re.findall(r'\b\d+\b', chunk)]
-            for digit in digits:
-                displaybuffer(buffer, str(digit))
+            if "ATTACK in" in chunk:
+                digits = [int(s) for s in re.findall(r'\b\d+\b', chunk)]
+                for digit in digits:
+                    displaybuffer(buffer, str(digit))
     return weechat.WEECHAT_RC_OK
 
 #---------------------------------------------------------------------------#
