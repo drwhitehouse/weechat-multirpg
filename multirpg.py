@@ -75,3 +75,4 @@ weechat.hook_print("botbuffer", "notify_private", "", 0, "msgparser", "")
 # getting stats
 querybot("whoami")
 querybot("stats")
+
