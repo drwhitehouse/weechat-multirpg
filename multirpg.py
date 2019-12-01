@@ -1,4 +1,5 @@
 import weechat
+import re
 
 weechat.register("weechat-multirpg", "drwhitehouse", "1.0", "GPL3", "multirpg script", "", "")
 
@@ -24,13 +25,21 @@ def querybot(msg):
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     displaybuffer(buffer, data)
-    displaybuffer(buffer, bufferp)
-    displaybuffer(buffer, tm)
-    displaybuffer(buffer, tags)
+#    displaybuffer(buffer, bufferp)
+#    displaybuffer(buffer, tm)
+#    displaybuffer(buffer, tags)
 #   displaybuffer(buffer, display)      # Not strings
 #   displaybuffer(buffer, is_hilight)   # Don't prnt
     displaybuffer(buffer, prefix)
     displaybuffer(buffer, msg)
+
+    if msg.startswith("You can"):
+        chunks = msg.split("You can")
+        for chunk in chunks:
+            displaybuffer(buffer, chunk)
+            digits = [int(s) for s in re.findall(r'\b\d+\b', chunk)]
+            for digit in digits:
+                displaybuffer(buffer, str(digit))
     return weechat.WEECHAT_RC_OK
 
 #---------------------------------------------------------------------------#
