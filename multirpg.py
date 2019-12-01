@@ -41,7 +41,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 buffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
 
 # set title
-weechat.buffer_set(buffer, "weechat-multirpg", "This is title for my buffer.")
+weechat.buffer_set(buffer, "title", "weechat-multirpg - multirpg bot for weechat.")
 
 # disable logging, by setting local variable "no_log" to "1"
 weechat.buffer_set(buffer, "localvar_set_no_log", "1")
@@ -57,4 +57,7 @@ weechat.command(mrpgchanbuffer, "/query multirpg")
 # weechat.hook_timer(60 * 1000, 60, 0, "querybot", "whoami")
 
 # read test
-weechat.hook_print("mrpgbuffer", "", "", 1, "msgparser", "") # catch prvmsg
+weechat.hook_print("mrpgchanbuffer", "", "horseshoecrab", 0, "msgparser", "")
+
+# does this get called?
+displaybuffer(buffer, "Well does it?")
