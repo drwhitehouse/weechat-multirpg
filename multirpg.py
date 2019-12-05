@@ -69,7 +69,7 @@ weechat.buffer_set(buffer, "title", "weechat-multirpg - multirpg bot for weechat
 weechat.buffer_set(buffer, "localvar_set_no_log", "1")
 
 # create channel buffer
-chanbuffer = weechat.info_get("irc_buffer", 'myserver,#multirpg')
+chanbuffer = weechat.info_get("irc_buffer", "'{}', #multirpg".format(myserver))
 
 # start script
 displaybuffer(buffer, "Starting weechat-multirpg")
@@ -78,14 +78,14 @@ displaybuffer(buffer, "Starting weechat-multirpg")
 weechat.command(chanbuffer, "/query multirpg")
 
 # create bot buffer
-botbuffer = weechat.info_get("irc_buffer", 'myserver,multirpg')
+botbuffer = weechat.info_get("irc_buffer", "'{}', multirpg".format(myserver))
 
 # timer test
 # weechat.hook_timer(60 * 1000, 60, 0, "querybot", "whoami")
 
 # read test
-weechat.hook_print("chanbuffer", "", 'mynick', 0, "msgparser", "")
-weechat.hook_print("botbuffer", "notify_private", "", 1, "msgparser", "")
+weechat.hook_print("'{}'", "", "'{}'", 0, "msgparser", "".format(chanbuffer, mynick))
+weechat.hook_print("'{}'", "notify_private", "", 1, "msgparser", "".format(botbuffer))
 
 # getting stats
 querybot("stats")
