@@ -19,27 +19,33 @@ def buffer_close_cb(data, buffer):
 def displaybuffer(buffer, msg):
     weechat.prnt(buffer, msg)
 
-# send stats
-def sendstats(data,timer):
-    displaybuffer(scriptbuffer, "Sending stats:")
-    weechat.command(botbuffer, "stats")
-    return weechat.WEECHAT_RC_OK
-
 # get seconds
 def getseconds(msg):
     attackcounter = 0
     displaybuffer(scriptbuffer, msg)
     digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
-    for digit in digits:
-        attackcounter = attackcounter + digits[0] * 86400
-        attackcounter = attackcounter + digits[1] * 3600
-        attackcounter = attackcounter + digits[2] * 60
-        attackcounter = attackcounter + digits[3]
+    attackcounter = attackcounter + digits[0] * 86400       # Days
+    attackcounter = attackcounter + digits[1] * 3600        # Hours
+    attackcounter = attackcounter + digits[2] * 60          # Minutes
+    attackcounter = attackcounter + digits[3]               # Seconds
+    attackcounter = attackcounter + 10                      # And 10 more for luck
     displaybuffer(scriptbuffer, str(attackcounter))
+    return attackcounter
+
+# countdown
+def countdown(data,timer):
+    if int(timer) == 0:
+        weechat.command(botbuffer, "stats")
+    else:
+        displaybuffer(scriptbuffer, timer)
+    return weechat.WEECHAT_RC_OK
 
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
+
+    # Debug crap
+
     #displaybuffer(scriptbuffer, "---")
     #displaybuffer(scriptbuffer, data)              # Very boring
     #displaybuffer(scriptbuffer, bufferp)
@@ -54,16 +60,18 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     if "You can now ATTACK." in msg:
         displaybuffer(scriptbuffer, "Attacking:")
         weechat.command(botbuffer, "attack lich")
+        weechat.command(botbuffer, "stats")
 
     if "You can now CHALLENGE." in msg:
         displaybuffer(scriptbuffer, "Challenging:")
         weechat.command(botbuffer, "challenge")
+        weechat.command(botbuffer, "stats")
 
     if msg.startswith("You can ATTACK"):
-        chunks = msg.split("You can")
+        chunks = msg.split(". ")
         for chunk in chunks:
-	    if "in" in chunk:
-                getseconds(chunk)
+	    if "ATTACK in" in chunk:
+                weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "") # step in seconds
 
     return weechat.WEECHAT_RC_OK
 
@@ -108,13 +116,10 @@ displaybuffer(scriptbuffer, "---")
 #weechat.hook_print(chanbuffer, "nick_multirpg", "", 0, "msgparser", "")
 #weechat.hook_print("", "nick_multirpg", "", 0, "msgparser", "")
 #weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser", "")
-
-# set timer
-weechat.hook_timer(75 * 60 * 1000, 0, 0, "sendstats", "")
+#weechat.hook_print("", "nick_multirpg", "", 0, "msgparser", "") # Multirpg
 
 # set print hook
 weechat.hook_print("", "notify_private", "", 0, "msgparser", "") # Private only
-#weechat.hook_print("", "nick_multirpg", "", 0, "msgparser", "") # Multirpg
 
 # initialising
 displaybuffer(scriptbuffer, "Sending whoami & stats:")
