@@ -32,6 +32,14 @@ def getseconds(msg):
     displaybuffer(scriptbuffer, str(attackcounter))
     return attackcounter
 
+# hook init
+def hookinit(data,timer):
+    if int(timer) == 0:
+        displaybuffer(scriptbuffer, "Hook initialised...")
+    else:
+        displaybuffer(scriptbuffer, timer)
+    return weechat.WEECHAT_RC_OK
+
 # countdown
 def countdown(data,timer):
     if int(timer) == 0:
@@ -43,35 +51,36 @@ def countdown(data,timer):
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
+    global ahook, chook, shook, phook
 
-    # Debug crap
+    # take action
 
-    #displaybuffer(scriptbuffer, "---")
-    #displaybuffer(scriptbuffer, data)              # Very boring
-    #displaybuffer(scriptbuffer, bufferp)
-    #displaybuffer(scriptbuffer, tm)
-    #displaybuffer(scriptbuffer, tags)
-    #displaybuffer(scriptbuffer, str(display))      # Not strings
-    #displaybuffer(scriptbuffer, str(is_hilight))   # Don't prnt
-    #displaybuffer(scriptbuffer, prefix)
-    #displaybuffer(scriptbuffer, msg)
-    #displaybuffer(scriptbuffer, "---")
-
-    if "You can now ATTACK." in msg:
-        displaybuffer(scriptbuffer, "Attacking:")
-        weechat.command(botbuffer, "attack lich")
+    if "You can now" in msg:
+        if "You can now ATTACK." in msg:
+            displaybuffer(scriptbuffer, "Attacking:")
+            weechat.command(botbuffer, "attack lich")
+        if "You can now CHALLENGE." in msg:
+            displaybuffer(scriptbuffer, "Challenging:")
+            weechat.command(botbuffer, "challenge")
+        if "You can now CHALLENGE." in msg:
+            displaybuffer(scriptbuffer, "Slaying:")
+            weechat.command(botbuffer, "slay madusa")
         weechat.command(botbuffer, "stats")
 
-    if "You can now CHALLENGE." in msg:
-        displaybuffer(scriptbuffer, "Challenging:")
-        weechat.command(botbuffer, "challenge")
-        weechat.command(botbuffer, "stats")
+    # set hooks
 
-    if msg.startswith("You can ATTACK"):
+    if "You can" in msg:
         chunks = msg.split(". ")
         for chunk in chunks:
 	    if "ATTACK in" in chunk:
-                weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "") # step in seconds
+                weechat.unhook(ahook)
+                ahook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "") # step in seconds
+	    if "CHALLENGE in" in chunk:
+                weechat.unhook(chook)
+                chook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "") # step in seconds
+	    if "SLAY in" in chunk:
+                weechat.unhook(shook)
+                shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "") # step in seconds
 
     return weechat.WEECHAT_RC_OK
 
@@ -97,32 +106,8 @@ chanbuffer = weechat.info_get("irc_buffer", "freenode, #multirpg")
 weechat.command(chanbuffer, "/query multirpg")
 botbuffer = weechat.current_buffer()
 
-# debug
-displaybuffer(scriptbuffer, "Buffer pointers:")
-displaybuffer(scriptbuffer, "")
-displaybuffer(scriptbuffer, "---")
-displaybuffer(scriptbuffer, "scriptbuffer:")
-displaybuffer(scriptbuffer,str(scriptbuffer))
-displaybuffer(scriptbuffer, "")
-displaybuffer(scriptbuffer, "chanbuffer:")
-displaybuffer(scriptbuffer,str(chanbuffer))
-displaybuffer(scriptbuffer, "")
-displaybuffer(scriptbuffer, "botbuffer:")
-displaybuffer(scriptbuffer,str(botbuffer))
-displaybuffer(scriptbuffer, "---")
-
-# hooks
-#weechat.hook_print(botbuffer, "", "", 0, "msgparser", "")
-#weechat.hook_print(chanbuffer, "nick_multirpg", "", 0, "msgparser", "")
-#weechat.hook_print("", "nick_multirpg", "", 0, "msgparser", "")
-#weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser", "")
-#weechat.hook_print("", "nick_multirpg", "", 0, "msgparser", "") # Multirpg
-
-# set print hook
-weechat.hook_print("", "notify_private", "", 0, "msgparser", "") # Private only
-
-# initialising
-displaybuffer(scriptbuffer, "Sending whoami & stats:")
-displaybuffer(scriptbuffer, "")
-weechat.command(botbuffer, "whoami")
-weechat.command(botbuffer, "stats")
+# initialise hooks
+ahook = weechat.hook_timer(1 * 1000, 60, 60, "hookinit", "")
+chook = weechat.hook_timer(1 * 1000, 60, 120, "hookinit", "")
+shook = weechat.hook_timer(1 * 1000, 60, 240, "hookinit", "")
+phook = weechat.hook_print("", "notify_private", "", 0, "msgparser", "")
