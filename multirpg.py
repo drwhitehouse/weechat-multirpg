@@ -55,13 +55,16 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
     if "You can now" in msg:
         if "You can now ATTACK." in msg:
-            weechat.prnt(scriptbuffer, "Attacking:")
+            weechat.prnt(scriptbuffer, "Attacking...")
+            weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "attack skeleton")
         if "You can now CHALLENGE." in msg:
-            weechat.prnt(scriptbuffer, "Challenging:")
+            weechat.prnt(scriptbuffer, "Challenging...")
+            weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "challenge")
         if "You can now SLAY." in msg:
-            weechat.prnt(scriptbuffer, "Slaying:")
+            weechat.prnt(scriptbuffer, "Slaying...")
+            weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "slay medusa")
         weechat.command(botbuffer, "stats")
 
@@ -100,7 +103,7 @@ weechat.buffer_set(scriptbuffer, "title", "weechat-multirpg - multirpg bot for w
 weechat.buffer_set(scriptbuffer, "localvar_set_no_log", "1")
 
 # start script
-weechat.prnt(scriptbuffer, "Starting weechat-multirpg")
+weechat.prnt(scriptbuffer, "Starting weechat-multirpg...")
 weechat.prnt(scriptbuffer, "")
 
 # create channel buffer
