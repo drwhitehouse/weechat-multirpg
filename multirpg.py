@@ -17,14 +17,13 @@ def buffer_close_cb(data, buffer):
 
 # get seconds
 def getseconds(msg):
-    attackcounter = 0
+    seconds = 0
     digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
-    attackcounter = attackcounter + digits[0] * 86400       # Days
-    attackcounter = attackcounter + digits[1] * 3600        # Hours
-    attackcounter = attackcounter + digits[2] * 60          # Minutes
-    attackcounter = attackcounter + digits[3]               # Seconds
-    attackcounter = attackcounter + 10                      # And 10 more for luck
-    return attackcounter
+    seconds = seconds + digits[0] * 86400       # Days
+    seconds = seconds + digits[1] * 3600        # Hours
+    seconds = seconds + digits[2] * 60          # Minutes
+    seconds = seconds + digits[3]               # Seconds
+    return seconds
 
 # countdown
 def countdown(data,timer):
@@ -51,21 +50,24 @@ def show_mrpgbar(data, item, window):
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     global ahook, chook, shook
 
+    creep = "skeleton"
+    monster = "medusa"
+
     # take action
 
     if "You can now" in msg:
         if "You can now ATTACK." in msg:
-            weechat.prnt(scriptbuffer, "Attacking...")
+            weechat.prnt(scriptbuffer, "%sAttacking..." % weechat.color("red, black"))
             weechat.prnt(scriptbuffer, "")
-            weechat.command(botbuffer, "attack skeleton")
+            weechat.command(botbuffer, "attack %s" % (creep))
         if "You can now CHALLENGE." in msg:
-            weechat.prnt(scriptbuffer, "Challenging...")
+            weechat.prnt(scriptbuffer, "%sChallenging..." % weechat.color("red, black"))
             weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "challenge")
         if "You can now SLAY." in msg:
-            weechat.prnt(scriptbuffer, "Slaying...")
+            weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(scriptbuffer, "")
-            weechat.command(botbuffer, "slay medusa")
+            weechat.command(botbuffer, "slay %s" % (monster))
         weechat.command(botbuffer, "stats")
 
     # set hooks
@@ -74,12 +76,18 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         chunks = msg.split(". ")
         for chunk in chunks:
 	    if "ATTACK in" in chunk:
+                weechat.prnt(scriptbuffer, "Resetting attack counter...")
+                weechat.prnt(scriptbuffer, "")
                 weechat.unhook(ahook)
                 ahook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "attack") # step in seconds
 	    if "CHALLENGE in" in chunk:
+                weechat.prnt(scriptbuffer, "Resetting challenge counter...")
+                weechat.prnt(scriptbuffer, "")
                 weechat.unhook(chook)
                 chook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "challenge") # step in seconds
 	    if "SLAY in" in chunk:
+                weechat.prnt(scriptbuffer, "Resetting slay counter...")
+                weechat.prnt(scriptbuffer, "")
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
@@ -103,7 +111,7 @@ weechat.buffer_set(scriptbuffer, "title", "weechat-multirpg - multirpg bot for w
 weechat.buffer_set(scriptbuffer, "localvar_set_no_log", "1")
 
 # start script
-weechat.prnt(scriptbuffer, "Starting weechat-multirpg...")
+weechat.prnt(scriptbuffer, "%sStarting weechat-multirpg..." % weechat.color("green,black"))
 weechat.prnt(scriptbuffer, "")
 
 # create channel buffer
