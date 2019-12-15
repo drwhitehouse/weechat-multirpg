@@ -23,6 +23,7 @@ def getseconds(msg):
     seconds = seconds + digits[1] * 3600        # Hours
     seconds = seconds + digits[2] * 60          # Minutes
     seconds = seconds + digits[3]               # Seconds
+    seconds = seconds + 30                      # This isn't very accurate...
     return seconds
 
 # countdown
