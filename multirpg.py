@@ -94,7 +94,7 @@ def show_mrpgbar(data, item, window):
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global mynick, myclass, ahook, chook, shook, lhook
+    global mynick, myclass, creep, ahook, chook, shook, lhook
 
     monster = "medusa"
 
@@ -163,6 +163,9 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 mynick = "horseshoecrab"
 myclass = "weechat tester"
 ircserver = "freenode"
+
+# initialise foes
+creep = ""
 
 # create script buffer
 scriptbuffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
