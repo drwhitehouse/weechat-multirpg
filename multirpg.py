@@ -15,6 +15,49 @@ def buffer_close_cb(data, buffer):
     # ...
     return weechat.WEECHAT_RC_OK
 
+# call bot for whoami & stats
+def callbot():
+    weechat.command(botbuffer, "whoami")
+    weechat.command(botbuffer, "stats")
+
+# get creep for attack
+def getcreep(mylevel):
+    if mylevel >= 150:
+        creep = "ogre"
+    elif mylevel >= 140:
+        creep = "wyvern"
+    elif mylevel >= 130:
+        creep = "beholder"
+    elif mylevel >= 120:
+        creep = "minotaur"
+    elif mylevel >= 110:
+        creep = "phoneix"
+    elif mylevel >= 100:
+        creep = "monkey"
+    elif mylevel >= 90:
+        creep = "mutant"
+    elif mylevel >= 80:
+        creep = "cyclops"
+    elif mylevel >= 70:
+        creep = "troll"
+    elif mylevel >= 60:
+        creep = "shadow"
+    elif mylevel >= 50:
+        creep = "ghost"
+    elif mylevel >= 40:
+        creep = "skeleton"
+    elif mylevel >= 30:
+        creep = "lich"
+    elif mylevel >= 20:
+        creep = "goblin"
+    elif mylevel >= 15:
+        creep = "spider"
+    elif mylevel >= 10:
+        creep = "locust"
+    else:
+        creep = "bush"
+    return creep
+
 # get seconds
 def getseconds(msg):
     seconds = 0
@@ -28,13 +71,15 @@ def getseconds(msg):
 
 # countdown
 def countdown(data,timer):
-    global acount, ccount, scount 
+    global acount, ccount, scount, lcount
     if data == "attack":
         acount = timer
     if data == "challenge":
         ccount = timer
     if data == "slay":
         scount = timer
+    if data == "level":
+        lcount = timer
     if int(timer) == 0:
         weechat.command(botbuffer, "stats")
     else:
@@ -42,17 +87,35 @@ def countdown(data,timer):
     return weechat.WEECHAT_RC_OK
 
 def show_mrpgbar(data, item, window):
-    global acount, ccount, scount
-    mycontent = "a:%s c:%s s:%s" % (acount, ccount, scount)
+    global acount, ccount, scount, lcount
+    mycontent = "a:%s c:%s s:%s l:%s" % (acount, ccount, scount, lcount)
     return mycontent
 
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global ahook, chook, shook
+    global mynick, myclass, ahook, chook, shook, lhook
 
-    creep = "skeleton"
     monster = "medusa"
+
+    # display lines about me
+
+    if mynick in msg:
+        weechat.prnt(scriptbuffer, msg)
+        weechat.prnt(scriptbuffer, "")
+        if myclass in msg:
+            chunks = msg.split(". ")
+            for chunk in chunks:
+                if chunk.startswith("You are"):
+                    mylevel = [int(s) for s in re.findall(r'\b\d+\b', chunk)]
+                    creep = getcreep(mylevel[0])
+                    weechat.prnt(scriptbuffer, "Attack target: %s" % (creep))
+                    weechat.prnt(scriptbuffer, "")
+                if chunk.startswith("Next level"):
+                    weechat.prnt(scriptbuffer, "Resetting ttl counter...")
+                    weechat.prnt(scriptbuffer, "")
+                    weechat.unhook(lhook)
+                    lhook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "level") # step in seconds
 
     # take action
 
@@ -69,7 +132,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "slay %s" % (monster))
-        weechat.command(botbuffer, "stats")
+        callbot()
 
     # set hooks
 
@@ -92,15 +155,14 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
-    # display lines about me
-
-    if "horseshoecrab" in msg:
-        weechat.prnt(scriptbuffer, msg)
-        weechat.prnt(scriptbuffer, "")
-
     return weechat.WEECHAT_RC_OK
 
 #---------------------------------------------------------------------------#
+
+# initialise variables
+mynick = "horseshoecrab"
+myclass = "weechat tester"
+ircserver = "freenode"
 
 # create script buffer
 scriptbuffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
@@ -116,28 +178,30 @@ weechat.prnt(scriptbuffer, "%sStarting weechat-multirpg..." % weechat.color("gre
 weechat.prnt(scriptbuffer, "")
 
 # create channel buffer
-chanbuffer = weechat.info_get("irc_buffer", "freenode, #multirpg")
+chanbuffer = weechat.info_get("irc_buffer", "%s, #multirpg" %(ircserver))
 
 # query bot
 weechat.command(chanbuffer, "/query multirpg")
 botbuffer = weechat.current_buffer()
 
 # initialise hooks
-ahook = "0"
-chook = "0"
-shook = "0"
+ahook = ""
+chook = ""
+shook = ""
+lhook = ""
 phook = weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser", "")
 
 # initialise counters
 acount = 0
 ccount = 0
 scount = 0
+lcount = 0
 
 # setup bar
 mrpgbar = weechat.bar_item_new("mrpgbar", "show_mrpgbar", "")
 weechat.bar_item_update("mrpgbar")
 
 # Issue stats command to kick us off...
-weechat.prnt(scriptbuffer, "Running stats to get counters...")
+weechat.prnt(scriptbuffer, "Getting counters...")
 weechat.prnt(scriptbuffer, "")
-weechat.command(botbuffer, "stats")
+callbot()
