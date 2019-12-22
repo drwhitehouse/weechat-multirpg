@@ -31,7 +31,7 @@ def getcreep(mylevel):
     elif mylevel >= 120:
         creep = "minotaur"
     elif mylevel >= 110:
-        creep = "phoneix"
+        creep = "phoenix"
     elif mylevel >= 100:
         creep = "monkey"
     elif mylevel >= 90:
