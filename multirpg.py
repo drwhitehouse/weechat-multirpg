@@ -81,7 +81,7 @@ def countdown(data,timer):
     if data == "level":
         lcount = timer
     if int(timer) == 0:
-        weechat.command(botbuffer, "stats")
+        callbot()
     else:
         weechat.bar_item_update("mrpgbar")
     return weechat.WEECHAT_RC_OK
