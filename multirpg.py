@@ -131,6 +131,14 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank deposit %s" % (deposit))
+                bank = bank + deposit
+
+    if bank >= 2000:
+        weechat.prnt(scriptbuffer, "Upgrading items ...")
+        weechat.prnt(scriptbuffer, "")
+        weechat.command(botbuffer, "bank withdraw 2000")
+        weechat.command(botbuffer, "upgrade all 10")
+        bank = bank - 2000
 
     # display lines about me
 
