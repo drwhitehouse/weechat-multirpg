@@ -17,6 +17,7 @@ def buffer_close_cb(data, buffer):
 
 # call bot for whoami & stats
 def callbot():
+    weechat.command(botbuffer, "bank")
     weechat.command(botbuffer, "whoami")
     weechat.command(botbuffer, "stats")
 
@@ -58,10 +59,33 @@ def getcreep(mylevel):
         creep = "bush"
     return creep
 
+# get monster for slay
+def getmonster(mysum):
+    if mysum >= 10000:
+        monster = "hippogriff"
+    elif mysum >= 9000:
+        monster = "sphinx"
+    elif mysum >= 8000:
+        monster = "dragon"
+    elif mysum >= 7000:
+        monster = "vampire"
+    elif mysum >= 6000:
+        monster = "mammoth"
+    elif mysum >= 5000:
+        monster = "centaur"
+    else:
+        monster = "medusa"
+    return monster
+
+# get digits
+def getdigits(msg):
+    digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
+    return digits
+
 # get seconds
 def getseconds(msg):
     seconds = 0
-    digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
+    digits = getdigits(msg)
     seconds = seconds + digits[0] * 86400       # Days
     seconds = seconds + digits[1] * 3600        # Hours
     seconds = seconds + digits[2] * 60          # Minutes
@@ -87,16 +111,26 @@ def countdown(data,timer):
     return weechat.WEECHAT_RC_OK
 
 def show_mrpgbar(data, item, window):
-    global acount, ccount, scount, lcount
-    mycontent = "a:%s c:%s s:%s l:%s" % (acount, ccount, scount, lcount)
+    global acount, ccount, scount, lcount, bank
+    mycontent = "attack: %s challenge: %s slay: %s level: %s gold: %s" % (acount, ccount, scount, lcount, bank)
     return mycontent
 
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global mynick, myclass, creep, ahook, chook, shook, lhook
+    global mynick, myclass, creep, monster, bank, ahook, chook, shook, lhook
 
-    monster = "medusa"
+    # finance
+
+    if msg.startswith("You have"):
+        if "gold in the bank" in msg:
+            bank = getdigits(msg)[0]
+            carry = getdigits(msg)[1]
+            if carry > 40:
+                deposit = carry - 40
+                weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
+                weechat.prnt(scriptbuffer, "")
+                weechat.command(botbuffer, "bank deposit %s" % (deposit))
 
     # display lines about me
 
@@ -107,7 +141,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             chunks = msg.split(". ")
             for chunk in chunks:
                 if chunk.startswith("You are"):
-                    mylevel = [int(s) for s in re.findall(r'\b\d+\b', chunk)]
+                    mylevel = getdigits(chunk)
                     creep = getcreep(mylevel[0])
                     weechat.prnt(scriptbuffer, "Attack target: %s" % (creep))
                     weechat.prnt(scriptbuffer, "")
@@ -116,6 +150,20 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                     weechat.prnt(scriptbuffer, "")
                     weechat.unhook(lhook)
                     lhook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "level") # step in seconds
+
+    # get monster
+
+    if msg.startswith("Items:"):
+        chunks = msg.split(". ")
+        for chunk in chunks:
+            if chunk.startswith("Items:"):
+                bits = msg.split(", ")
+                for bit in bits:
+                    if bit.startswith("Total sum:"):
+                        mysum = getdigits(bit)
+                        monster = getmonster(mysum[0])
+                        weechat.prnt(scriptbuffer, "Slay target: %s" % (monster))
+                        weechat.prnt(scriptbuffer, "")
 
     # take action
 
@@ -165,7 +213,11 @@ myclass = "weechat tester"
 ircserver = "freenode"
 
 # initialise foes
-creep = ""
+creep = "bush"
+monster = "medusa"
+
+# initialise bank account
+bank = 0
 
 # create script buffer
 scriptbuffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
