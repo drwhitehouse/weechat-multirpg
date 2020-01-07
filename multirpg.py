@@ -12,17 +12,13 @@ def buffer_input_cb(data, buffer, input_data):
 
 # callback called when buffer is closed
 def buffer_close_cb(data, buffer):
-    delete_counterbar()
+    weechat.bar_remove(ctrbar)
     return weechat.WEECHAT_RC_OK
 
 # callback called when script unloaded
 def unload_script_cb():
     # ...
     return weechat.WEECHAT_RC_OK
-
-# delete counterbar
-def delete_counterbar():
-    weechat.command("", "/bar del counterbar")
 
 # call bot for whoami & stats
 def callbot():
@@ -119,7 +115,7 @@ def countdown(data,timer):
         weechat.bar_item_update("mrpgcounters")
     return weechat.WEECHAT_RC_OK
 
-# show counters for counterbar
+# show counters for mrpgbar
 def show_mrpgcounters(data, item, window):
     global acount, ccount, scount, lcount, bank
     mycontent = "attack: %s challenge: %s slay: %s level: %s gold: %s" % (acount, ccount, scount, lcount, bank)
@@ -288,11 +284,9 @@ ccount = 0
 scount = 0
 lcount = 0
 
-# setup & display bar
+# setup bar
 mrpgcounters = weechat.bar_item_new("mrpgcounters", "show_mrpgcounters", "")
-weechat.bar_item_update("mrpgcounters")
-
-bar = weechat.bar_new("counterbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
+ctrbar = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
             "0", "5", "default", "white", "blue", "off", "mrpgcounters")
 
 # Issue callbot command to kick us off...
