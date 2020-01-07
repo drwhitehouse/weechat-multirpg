@@ -3,7 +3,7 @@ import weechat
 import re
 
 # register the script
-weechat.register("weechat-multirpg", "drwhitehouse", "1.0", "GPL3", "multirpg script", "", "")
+weechat.register("weechat-multirpg", "drwhitehouse", "1.0", "GPL3", "multirpg script", "unload_script_cb", "")
 
 # callback for data received in input
 def buffer_input_cb(data, buffer, input_data):
@@ -12,8 +12,17 @@ def buffer_input_cb(data, buffer, input_data):
 
 # callback called when buffer is closed
 def buffer_close_cb(data, buffer):
+    delete_counterbar()
+    return weechat.WEECHAT_RC_OK
+
+# callback called when script unloaded
+def unload_script_cb():
     # ...
     return weechat.WEECHAT_RC_OK
+
+# delete counterbar
+def delete_counterbar():
+    weechat.command("", "/bar del counterbar")
 
 # call bot for whoami & stats
 def callbot():
@@ -107,10 +116,11 @@ def countdown(data,timer):
     if int(timer) == 0:
         callbot()
     else:
-        weechat.bar_item_update("mrpgbar")
+        weechat.bar_item_update("mrpgcounters")
     return weechat.WEECHAT_RC_OK
 
-def show_mrpgbar(data, item, window):
+# show counters for counterbar
+def show_mrpgcounters(data, item, window):
     global acount, ccount, scount, lcount, bank
     mycontent = "attack: %s challenge: %s slay: %s level: %s gold: %s" % (acount, ccount, scount, lcount, bank)
     return mycontent
@@ -133,11 +143,37 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(botbuffer, "bank deposit %s" % (deposit))
                 bank = bank + deposit
 
+    if msg.startswith("Power Potions:"):
+        has_eng = getdigits(msg)[5]
+        eng_lvl = getdigits(msg)[6]
+        has_her = getdigits(msg)[3]
+        her_lvl = getdigits(msg)[4]
+        if has_eng == 0 and bank > 1000:
+            weechat.prnt(scriptbuffer, "Hiring engineer...")
+            weechat.command(botbuffer, "bank withdraw 1000")
+            bank = bank - 1000
+            weechat.command(botbuffer, "hire engineer")
+        if eng_lvl < 9 and bank > 200:
+            weechat.prnt(scriptbuffer, "Upgrading engineer...")
+            weechat.command(botbuffer, "bank withdraw 200")
+            bank = bank - 200
+            weechat.command(botbuffer, "engineer level")
+        if has_her == 0 and bank > 1000:
+            weechat.prnt(scriptbuffer, "Summoning hero...")
+            weechat.command(botbuffer, "bank withdraw 1000")
+            bank = bank - 1000
+            weechat.command(botbuffer, "summon hero")
+        if her_lvl < 9 and bank > 200:
+            weechat.prnt(scriptbuffer, "Upgrading hero...")
+            weechat.command(botbuffer, "bank withdraw 200")
+            bank = bank - 200
+            weechat.command(botbuffer, "hero level")
+
     if bank >= 2000:
         weechat.prnt(scriptbuffer, "Upgrading items ...")
         weechat.prnt(scriptbuffer, "")
         weechat.command(botbuffer, "bank withdraw 2000")
-        weechat.command(botbuffer, "upgrade all 10")
+        weechat.command(botbuffer, "upgrade boots 100")
         bank = bank - 2000
 
     # display lines about me
@@ -154,8 +190,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                     weechat.prnt(scriptbuffer, "Attack target: %s" % (creep))
                     weechat.prnt(scriptbuffer, "")
                 if chunk.startswith("Next level"):
-                    weechat.prnt(scriptbuffer, "Resetting ttl counter...")
-                    weechat.prnt(scriptbuffer, "")
                     weechat.unhook(lhook)
                     lhook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "level") # step in seconds
 
@@ -196,18 +230,12 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         chunks = msg.split(". ")
         for chunk in chunks:
 	    if "ATTACK in" in chunk:
-                weechat.prnt(scriptbuffer, "Resetting attack counter...")
-                weechat.prnt(scriptbuffer, "")
                 weechat.unhook(ahook)
                 ahook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "attack") # step in seconds
 	    if "CHALLENGE in" in chunk:
-                weechat.prnt(scriptbuffer, "Resetting challenge counter...")
-                weechat.prnt(scriptbuffer, "")
                 weechat.unhook(chook)
                 chook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "challenge") # step in seconds
 	    if "SLAY in" in chunk:
-                weechat.prnt(scriptbuffer, "Resetting slay counter...")
-                weechat.prnt(scriptbuffer, "")
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
@@ -260,11 +288,12 @@ ccount = 0
 scount = 0
 lcount = 0
 
-# setup bar
-mrpgbar = weechat.bar_item_new("mrpgbar", "show_mrpgbar", "")
-weechat.bar_item_update("mrpgbar")
+# setup & display bar
+mrpgcounters = weechat.bar_item_new("mrpgcounters", "show_mrpgcounters", "")
+weechat.bar_item_update("mrpgcounters")
 
-# Issue stats command to kick us off...
-weechat.prnt(scriptbuffer, "Getting counters...")
-weechat.prnt(scriptbuffer, "")
+bar = weechat.bar_new("counterbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
+            "0", "5", "default", "white", "blue", "off", "mrpgcounters")
+
+# Issue callbot command to kick us off...
 callbot()
