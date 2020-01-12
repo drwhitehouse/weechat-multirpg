@@ -144,26 +144,28 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         eng_lvl = getdigits(msg)[6]
         has_her = getdigits(msg)[3]
         her_lvl = getdigits(msg)[4]
-        if has_eng == 0 and bank > 1000:
-            weechat.prnt(scriptbuffer, "Hiring engineer...")
-            weechat.command(botbuffer, "bank withdraw 1000")
-            bank = bank - 1000
-            weechat.command(botbuffer, "hire engineer")
-        if eng_lvl < 9 and bank > 200:
-            weechat.prnt(scriptbuffer, "Upgrading engineer...")
-            weechat.command(botbuffer, "bank withdraw 200")
-            bank = bank - 200
-            weechat.command(botbuffer, "engineer level")
-        if has_her == 0 and bank > 1000:
-            weechat.prnt(scriptbuffer, "Summoning hero...")
-            weechat.command(botbuffer, "bank withdraw 1000")
-            bank = bank - 1000
-            weechat.command(botbuffer, "summon hero")
-        if her_lvl < 9 and bank > 200:
-            weechat.prnt(scriptbuffer, "Upgrading hero...")
-            weechat.command(botbuffer, "bank withdraw 200")
-            bank = bank - 200
-            weechat.command(botbuffer, "hero level")
+        if eng_lvl < 9:
+            if has_eng == 0 and bank > 1500:
+                weechat.prnt(scriptbuffer, "Hiring engineer...")
+                weechat.command(botbuffer, "bank withdraw 1000")
+                bank = bank - 1000
+                weechat.command(botbuffer, "hire engineer")
+            if has_eng == 1 and bank > 200:
+                weechat.prnt(scriptbuffer, "%sUpgrading engineer..." % weechat.color("red, black"))
+                weechat.command(botbuffer, "bank withdraw 200")
+                bank = bank - 200
+                weechat.command(botbuffer, "engineer level")
+        if her_lvl < 9:
+            if has_her == 0 and bank > 1500:
+                weechat.prnt(scriptbuffer, "Summoning hero...")
+                weechat.command(botbuffer, "bank withdraw 1000")
+                bank = bank - 1000
+                weechat.command(botbuffer, "summon hero")
+            if has_her == 1 and bank > 200:
+                weechat.prnt(scriptbuffer, "%sUpgrading hero..." % weechat.color("red, black"))
+                weechat.command(botbuffer, "bank withdraw 200")
+                bank = bank - 200
+                weechat.command(botbuffer, "hero level")
 
     if bank >= 2000:
         weechat.prnt(scriptbuffer, "Upgrading items ...")
