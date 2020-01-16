@@ -20,6 +20,25 @@ def unload_script_cb():
     # ...
     return weechat.WEECHAT_RC_OK
 
+# initialise configuration
+def multirpg_config_init():
+    global multirpg_config_file, multirpg_config_option
+    multirpg_config_file = weechat.config_new(CONFIG_FILE_NAME,"","")
+    if multirpg_config_file == "":
+        return
+    section_multirpg = weechat.config_new_section(multirpg_config_file, "multirpg", 0, 0, "", "", "", "", "", "", "", "", "", "")
+    if section_multirpg == "":
+        weechat.config_free(multirpg_config_file)
+        return
+    multirpg_config_option["mynick"] = weechat.config_new_option(multirpg_config_file, section_multirpg, "mynick", "string", "multirpg nickname", "", 0, 0, "", "", 0, "", "", "", "", "", "")
+    multirpg_config_option["myclass"] = weechat.config_new_option(multirpg_config_file, section_multirpg, "myclass", "string", "multirpg class", "", 0, 0, "", "", 0, "", "", "", "", "", "")
+    multirpg_config_option["ircserver"] = weechat.config_new_option(multirpg_config_file, section_multirpg, "ircserver", "string", "multirpg ircserver", "", 0, 0, "", "", 0, "", "", "", "", "", "")
+
+# read config file
+def multirpg_config_read():
+    global multirpg_config_file
+    return weechat.config_read(multirpg_config_file)
+
 # call bot for whoami & stats
 def callbot():
     weechat.command(botbuffer, "bank")
@@ -147,22 +166,26 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         if eng_lvl < 9:
             if has_eng == 0 and bank > 1500:
                 weechat.prnt(scriptbuffer, "Hiring engineer...")
+                weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
                 bank = bank - 1000
                 weechat.command(botbuffer, "hire engineer")
             if has_eng == 1 and bank > 200:
                 weechat.prnt(scriptbuffer, "%sUpgrading engineer..." % weechat.color("red, black"))
+                weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 200")
                 bank = bank - 200
                 weechat.command(botbuffer, "engineer level")
         if her_lvl < 9:
             if has_her == 0 and bank > 1500:
                 weechat.prnt(scriptbuffer, "Summoning hero...")
+                weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
                 bank = bank - 1000
                 weechat.command(botbuffer, "summon hero")
             if has_her == 1 and bank > 200:
                 weechat.prnt(scriptbuffer, "%sUpgrading hero..." % weechat.color("red, black"))
+                weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 200")
                 bank = bank - 200
                 weechat.command(botbuffer, "hero level")
@@ -242,9 +265,11 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 #---------------------------------------------------------------------------#
 
 # initialise variables
-mynick = "horseshoecrab"
-myclass = "weechat tester"
-ircserver = "freenode"
+CONFIG_FILE_NAME = "multirpg"
+
+# config file and options
+multirpg_config_file = ""
+multirpg_config_option = {}
 
 # initialise foes
 creep = "bush"
@@ -292,4 +317,9 @@ ctrbar = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name}
             "0", "5", "default", "white", "blue", "off", "mrpgcounters")
 
 # Issue callbot command to kick us off...
+multirpg_config_init()
+multirpg_config_read()
+mynick = weechat.config_string(multirpg_config_option['mynick'])
+myclass = weechat.config_string(multirpg_config_option['myclass'])
+ircserver = weechat.config_string(multirpg_config_option['ircserver'])
 callbot()
