@@ -278,6 +278,13 @@ monster = "medusa"
 # initialise bank account
 bank = 0
 
+# read configuration
+multirpg_config_init()
+multirpg_config_read()
+mynick = weechat.config_string(multirpg_config_option['mynick'])
+myclass = weechat.config_string(multirpg_config_option['myclass'])
+ircserver = weechat.config_string(multirpg_config_option['ircserver'])
+
 # create script buffer
 scriptbuffer = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
 
