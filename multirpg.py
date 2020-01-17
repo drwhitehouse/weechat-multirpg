@@ -324,9 +324,4 @@ ctrbar = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name}
             "0", "5", "default", "white", "blue", "off", "mrpgcounters")
 
 # Issue callbot command to kick us off...
-multirpg_config_init()
-multirpg_config_read()
-mynick = weechat.config_string(multirpg_config_option['mynick'])
-myclass = weechat.config_string(multirpg_config_option['myclass'])
-ircserver = weechat.config_string(multirpg_config_option['ircserver'])
 callbot()
