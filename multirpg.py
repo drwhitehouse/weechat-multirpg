@@ -250,13 +250,13 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     if "You can" in msg:
         chunks = msg.split(". ")
         for chunk in chunks:
-	    if "ATTACK in" in chunk:
+            if "ATTACK in" in chunk:
                 weechat.unhook(ahook)
                 ahook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "attack") # step in seconds
-	    if "CHALLENGE in" in chunk:
+            if "CHALLENGE in" in chunk:
                 weechat.unhook(chook)
                 chook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "challenge") # step in seconds
-	    if "SLAY in" in chunk:
+            if "SLAY in" in chunk:
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
