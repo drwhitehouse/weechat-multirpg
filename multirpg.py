@@ -165,7 +165,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         her_lvl = getdigits(msg)[4]
         if eng_lvl < 9:
             if has_eng == 0 and bank > 1500:
-                weechat.prnt(scriptbuffer, "Hiring engineer...")
+                weechat.prnt(scriptbuffer, "%sHiring engineer..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
                 bank = bank - 1000
@@ -178,7 +178,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(botbuffer, "engineer level")
         if her_lvl < 9:
             if has_her == 0 and bank > 1500:
-                weechat.prnt(scriptbuffer, "Summoning hero...")
+                weechat.prnt(scriptbuffer, "%sSummoning hero..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
                 bank = bank - 1000
@@ -191,7 +191,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(botbuffer, "hero level")
 
     if bank >= 2000:
-        weechat.prnt(scriptbuffer, "Upgrading items ...")
+        weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
         weechat.command(botbuffer, "bank withdraw 2000")
         weechat.command(botbuffer, "upgrade boots 100")
