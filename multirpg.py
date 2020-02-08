@@ -194,7 +194,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
         weechat.command(botbuffer, "bank withdraw 2000")
-        weechat.command(botbuffer, "upgrade boots 100")
+        weechat.command(botbuffer, "upgrade all 10")
         bank = bank - 2000
 
     # display lines about me
