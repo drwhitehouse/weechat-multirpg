@@ -145,6 +145,11 @@ def show_mrpgcounters(data, item, window):
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     global mynick, myclass, creep, monster, bank, ahook, chook, shook, lhook
 
+    # Wait, what, did we just log in?
+
+    if msg.startswith("Logon successful."):
+        callbot()
+
     # finance
 
     if msg.startswith("You have"):
