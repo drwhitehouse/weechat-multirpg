@@ -147,7 +147,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
     # Wait, what, did we just log in?
 
-    if msg.startswith("Logon successful."):
+    if "has logged in" in msg:
         callbot()
 
     # finance
