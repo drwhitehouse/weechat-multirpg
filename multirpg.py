@@ -101,6 +101,10 @@ def getmonster(mysum):
         monster = "medusa"
     return monster
 
+# get opponents for gambling
+def getbets():
+    weechat.command(mingbuffer, "!bestbet")
+
 # get digits
 def getdigits(msg):
     digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
@@ -143,7 +147,7 @@ def show_mrpgcounters(data, item, window):
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global mynick, myclass, creep, monster, bank, ahook, chook, shook, lhook
+    global mynick, myclass, mylevel, creep, monster, bank, ahook, chook, shook, lhook
 
     # Wait, what, did we just log in?
 
@@ -168,6 +172,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         eng_lvl = getdigits(msg)[6]
         has_her = getdigits(msg)[3]
         her_lvl = getdigits(msg)[4]
+        bets = getdigits(msg)[7]
         if eng_lvl < 9:
             if has_eng == 0 and bank > 1500:
                 weechat.prnt(scriptbuffer, "%sHiring engineer..." % weechat.color("red, black"))
@@ -194,6 +199,21 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(botbuffer, "bank withdraw 200")
                 bank = bank - 200
                 weechat.command(botbuffer, "hero level")
+        if bets < 5 and bank > 100:
+            if mylevel > 30:
+                getbets()
+
+    # Gamble
+
+    if msg.startswith("bestbet") and bank > 100:
+        weechat.prnt(scriptbuffer, "%sBetting ..." % weechat.color("red, black"))
+        weechat.prnt(scriptbuffer, "")
+        chunks = msg.split(" ")
+        win = chunks[1]
+        lose = chunks[2]
+        weechat.command(botbuffer, "bank withdraw 100")
+        weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
+        callbot()
 
     if bank >= 2000:
         weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
@@ -201,6 +221,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.command(botbuffer, "bank withdraw 2000")
         weechat.command(botbuffer, "upgrade all 10")
         bank = bank - 2000
+
 
     # display lines about me
 
@@ -276,6 +297,9 @@ CONFIG_FILE_NAME = "multirpg"
 multirpg_config_file = ""
 multirpg_config_option = {}
 
+# initialise mylevel
+mylevel = 0
+
 # initialise foes
 creep = "bush"
 monster = "medusa"
@@ -310,12 +334,16 @@ chanbuffer = weechat.info_get("irc_buffer", "%s, #multirpg" %(ircserver))
 weechat.command(chanbuffer, "/query multirpg")
 botbuffer = weechat.current_buffer()
 
+# query other bot
+weechat.command(chanbuffer, "/query Mingbeast")
+mingbuffer = weechat.current_buffer()
+
 # initialise hooks
 ahook = ""
 chook = ""
 shook = ""
 lhook = ""
-phook = weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser", "")
+phook = weechat.hook_print("", "notify_private,nick_multirpg,nick_Mingbeast", "", 0, "msgparser", "")
 
 # initialise counters
 acount = 0
