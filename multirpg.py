@@ -200,7 +200,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 bank = bank - 200
                 weechat.command(botbuffer, "hero level")
         if bets < 5 and bank > 100:
-            if mylevel > 30:
+            if mylevel[0] > 30:
                 getbets()
 
     # Gamble
