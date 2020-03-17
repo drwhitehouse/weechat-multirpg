@@ -199,20 +199,20 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(botbuffer, "bank withdraw 200")
                 bank = bank - 200
                 weechat.command(botbuffer, "hero level")
-        if bets < 5 and bank > 100:
-            if mylevel[0] > 30:
+        if bets < 5 and mylevel[0] > 30:
                 getbets()
 
     # Gamble
 
-    if msg.startswith("bestbet") and bank > 100:
+    if msg.startswith("bestbet") and bank > 500:
         weechat.prnt(scriptbuffer, "%sBetting ..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
         chunks = msg.split(" ")
         win = chunks[1]
         lose = chunks[2]
-        weechat.command(botbuffer, "bank withdraw 100")
-        weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
+        weechat.command(botbuffer, "bank withdraw 500")
+        for _ in range(5):
+            weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
         callbot()
 
     if bank >= 2000:
@@ -221,7 +221,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.command(botbuffer, "bank withdraw 2000")
         weechat.command(botbuffer, "upgrade all 10")
         bank = bank - 2000
-
 
     # display lines about me
 
