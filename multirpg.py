@@ -230,9 +230,15 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.prnt(scriptbuffer, "")
         chunks = msg.split(" ")
         opponent = chunks[1]
-        for _ in range(5):
-            weechat.command(botbuffer, "fight %s" % (opponent))
+        if opponent == mynick:
+            weechat.prnt(scriptbuffer, "Mingbeast can't get its act together - you need to find someone to fight!")
+            weechat.prnt(scriptbuffer, "")
+        else:
+            for _ in range(5):
+                weechat.command(botbuffer, "fight %s" % (opponent))
         callbot()
+
+    # Upgrade
 
     if bank >= 2000:
         weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
