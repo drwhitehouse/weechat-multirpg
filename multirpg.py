@@ -105,6 +105,11 @@ def getmonster(mysum):
 def getbets():
     weechat.command(mingbuffer, "!bestbet")
 
+# get opponent for fighting
+def getfights():
+    global mynick
+    weechat.command(mingbuffer, "!bestfight %s" % (mynick))
+
 # get digits
 def getdigits(msg):
     digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
@@ -173,6 +178,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         has_her = getdigits(msg)[3]
         her_lvl = getdigits(msg)[4]
         bets = getdigits(msg)[7]
+        fights = getdigits(msg)[2]
         if eng_lvl < 9:
             if has_eng == 0 and bank > 1500:
                 weechat.prnt(scriptbuffer, "%sHiring engineer..." % weechat.color("red, black"))
@@ -199,8 +205,10 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(botbuffer, "bank withdraw 200")
                 bank = bank - 200
                 weechat.command(botbuffer, "hero level")
-        if bets < 5 and mylevel[0] > 30:
+        if bets < 5 and mylevel[0] >= 30:
                 getbets()
+        if fights < 5 and mylevel[0] >= 10:
+                getfights()
 
     # Gamble
 
@@ -213,6 +221,15 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.command(botbuffer, "bank withdraw 500")
         for _ in range(5):
             weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
+        callbot()
+
+    if msg.startswith("bestfight"):
+        weechat.prnt(scriptbuffer, "%sFighting ..." % weechat.color("red, black"))
+        weechat.prnt(scriptbuffer, "")
+        chunks = msg.split(" ")
+        opponent = chunks[1]
+        for _ in range(5):
+            weechat.command(botbuffer, "fight %s" % (opponent))
         callbot()
 
     if bank >= 2000:
