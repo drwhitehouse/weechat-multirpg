@@ -223,6 +223,8 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
         callbot()
 
+    # Fight
+
     if msg.startswith("bestfight"):
         weechat.prnt(scriptbuffer, "%sFighting ..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
