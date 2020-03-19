@@ -2,9 +2,6 @@
 import weechat
 import re
 
-# register the script
-weechat.register("weechat-multirpg", "drwhitehouse", "1.0", "GPL3", "multirpg script", "unload_script_cb", "")
-
 # callback for data received in input
 def buffer_input_cb(data, buffer, input_data):
     # ...
@@ -154,10 +151,14 @@ def show_mrpgcounters(data, item, window):
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     global mynick, myclass, mylevel, creep, monster, bank, ahook, chook, shook, lhook
 
+    # Reset bot calling flag
+
+    needtocall = 0
+
     # Wait, what, did we just log in?
 
-    if "has logged in" in msg:
-        callbot()
+    if msg.startswith(mynick) and "has logged in" in msg:
+        needtocall = 1
 
     # finance
 
@@ -170,7 +171,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank deposit %s" % (deposit))
-                bank = bank + deposit
+                needtocall = 1
 
     if msg.startswith("Power Potions:"):
         has_eng = getdigits(msg)[5]
@@ -184,27 +185,27 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.prnt(scriptbuffer, "%sHiring engineer..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
-                bank = bank - 1000
                 weechat.command(botbuffer, "hire engineer")
+                needtocall = 1
             if has_eng == 1 and bank > 200:
                 weechat.prnt(scriptbuffer, "%sUpgrading engineer..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 200")
-                bank = bank - 200
                 weechat.command(botbuffer, "engineer level")
+                needtocall = 1
         if her_lvl < 9:
             if has_her == 0 and bank > 1500:
                 weechat.prnt(scriptbuffer, "%sSummoning hero..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
-                bank = bank - 1000
                 weechat.command(botbuffer, "summon hero")
+                needtocall = 1
             if has_her == 1 and bank > 200:
                 weechat.prnt(scriptbuffer, "%sUpgrading hero..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 200")
-                bank = bank - 200
                 weechat.command(botbuffer, "hero level")
+                needtocall = 1
         if bets < 5 and mylevel[0] >= 30:
                 getbets()
         if fights < 5 and mylevel[0] >= 10:
@@ -221,7 +222,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.command(botbuffer, "bank withdraw 500")
         for _ in range(5):
             weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
-        callbot()
+        needtocall = 1
 
     # Fight
 
@@ -236,7 +237,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         else:
             for _ in range(5):
                 weechat.command(botbuffer, "fight %s" % (opponent))
-        callbot()
+            needtocall = 1
 
     # Upgrade
 
@@ -245,7 +246,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.prnt(scriptbuffer, "")
         weechat.command(botbuffer, "bank withdraw 2000")
         weechat.command(botbuffer, "upgrade all 10")
-        bank = bank - 2000
+        needtocall = 1
 
     # display lines about me
 
@@ -293,7 +294,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "slay %s" % (monster))
-        callbot()
+        needtocall = 1
 
     # set hooks
 
@@ -310,11 +311,22 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
+    # if we need to, call the bot
+
+    if needtocall == 1:
+        callbot()
+
     return weechat.WEECHAT_RC_OK
 
 #---------------------------------------------------------------------------#
 
 # initialise variables
+
+SCRIPT_NAME = 'weechat-multirpg'
+SCRIPT_AUTHOR = 'drwhitehouse'
+SCRIPT_VERSION = '1.1'
+SCRIPT_LICENSE = 'GPL3'
+SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
 
 # config file and options
@@ -330,6 +342,9 @@ monster = "medusa"
 
 # initialise bank account
 bank = 0
+
+# register the script
+weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", "")
 
 # read configuration
 multirpg_config_init()
@@ -349,6 +364,8 @@ weechat.buffer_set(scriptbuffer, "localvar_set_no_log", "1")
 
 # start script
 weechat.prnt(scriptbuffer, "%sStarting weechat-multirpg..." % weechat.color("green,black"))
+weechat.prnt(scriptbuffer, "")
+weechat.prnt(scriptbuffer, "Version - %s" % SCRIPT_VERSION)
 weechat.prnt(scriptbuffer, "")
 
 # create channel buffer
