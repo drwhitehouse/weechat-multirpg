@@ -237,7 +237,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         else:
             for _ in range(5):
                 weechat.command(botbuffer, "fight %s" % (opponent))
-        needtocall = 1
+            needtocall = 1
 
     # Upgrade
 
