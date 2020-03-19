@@ -157,8 +157,14 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
     # Wait, what, did we just log in?
 
-    if msg.startswith(mynick) and "has logged in" in msg:
-        needtocall = 1
+
+    if msg.startswith(mynick):
+        if "has logged in" in msg:
+            needtocall = 1
+        if "and won!" in msg or "and lost!" in msg:
+            needtocall = 1
+        if "and killed it!" in msg:
+            needtocall = 1
 
     # finance
 
@@ -171,7 +177,8 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank deposit %s" % (deposit))
-                needtocall = 1
+        if "deposited" in msg or "withdrawn" in msg:
+            needtocall = 1
 
     if msg.startswith("Power Potions:"):
         has_eng = getdigits(msg)[5]
@@ -222,7 +229,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.command(botbuffer, "bank withdraw 500")
         for _ in range(5):
             weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
-        needtocall = 1
 
     # Fight
 
@@ -237,7 +243,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         else:
             for _ in range(5):
                 weechat.command(botbuffer, "fight %s" % (opponent))
-            needtocall = 1
 
     # Upgrade
 
@@ -246,7 +251,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.prnt(scriptbuffer, "")
         weechat.command(botbuffer, "bank withdraw 2000")
         weechat.command(botbuffer, "upgrade all 10")
-        needtocall = 1
 
     # display lines about me
 
@@ -294,7 +298,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(scriptbuffer, "")
             weechat.command(botbuffer, "slay %s" % (monster))
-        needtocall = 1
 
     # set hooks
 
@@ -324,7 +327,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
 SCRIPT_NAME = 'weechat-multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '1.1'
+SCRIPT_VERSION = '1.2'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
