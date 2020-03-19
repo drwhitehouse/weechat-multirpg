@@ -157,6 +157,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
     # Wait, what, did we just log in?
 
+
     if msg.startswith(mynick):
         if "has logged in" in msg:
             needtocall = 1
@@ -192,22 +193,26 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
                 weechat.command(botbuffer, "hire engineer")
+                needtocall = 1
             if has_eng == 1 and bank > 200:
                 weechat.prnt(scriptbuffer, "%sUpgrading engineer..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 200")
                 weechat.command(botbuffer, "engineer level")
+                needtocall = 1
         if her_lvl < 9:
             if has_her == 0 and bank > 1500:
                 weechat.prnt(scriptbuffer, "%sSummoning hero..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 1000")
                 weechat.command(botbuffer, "summon hero")
+                needtocall = 1
             if has_her == 1 and bank > 200:
                 weechat.prnt(scriptbuffer, "%sUpgrading hero..." % weechat.color("red, black"))
                 weechat.prnt(scriptbuffer, "")
                 weechat.command(botbuffer, "bank withdraw 200")
                 weechat.command(botbuffer, "hero level")
+                needtocall = 1
         if bets < 5 and mylevel[0] >= 30:
                 getbets()
         if fights < 5 and mylevel[0] >= 10:
