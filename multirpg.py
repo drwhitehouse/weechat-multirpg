@@ -38,9 +38,43 @@ def multirpg_config_read():
 
 # call bot for whoami & stats
 def callbot():
-    weechat.command(botbuffer, "bank")
-    weechat.command(botbuffer, "whoami")
     weechat.command(botbuffer, "stats")
+    weechat.command(botbuffer, "whoami")
+    weechat.command(botbuffer, "bank")
+
+# deposit gold
+def depositgold(deposit):
+    weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
+    weechat.prnt(scriptbuffer, "")
+    weechat.command(botbuffer, "bank deposit %s" % (deposit))
+
+# hire engineer
+def hireengineer():
+    weechat.prnt(scriptbuffer, "%sHiring engineer..." % weechat.color("red, black"))
+    weechat.prnt(scriptbuffer, "")
+    weechat.command(botbuffer, "bank withdraw 1000")
+    weechat.command(botbuffer, "hire engineer")
+
+# summon hero
+def summonhero():
+    weechat.prnt(scriptbuffer, "%sSummoning hero..." % weechat.color("red, black"))
+    weechat.prnt(scriptbuffer, "")
+    weechat.command(botbuffer, "bank withdraw 1000")
+    weechat.command(botbuffer, "summon hero")
+
+# upgrade engineer
+def upengineer():
+    weechat.prnt(scriptbuffer, "%sUpgrading engineer..." % weechat.color("red, black"))
+    weechat.prnt(scriptbuffer, "")
+    weechat.command(botbuffer, "bank withdraw 200")
+    weechat.command(botbuffer, "engineer level")
+
+# upgrade hero
+def uphero():
+    weechat.prnt(scriptbuffer, "%sUpgrading hero..." % weechat.color("red, black"))
+    weechat.prnt(scriptbuffer, "")
+    weechat.command(botbuffer, "bank withdraw 200")
+    weechat.command(botbuffer, "hero level")
 
 # get creep for attack
 def getcreep(mylevel):
@@ -102,10 +136,49 @@ def getmonster(mysum):
 def getbets():
     weechat.command(mingbuffer, "!bestbet")
 
+# gamble
+def gamble(win, lose):
+    weechat.command(botbuffer, "bank withdraw 500")
+    for _ in range(5):
+        weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
+
 # get opponent for fighting
 def getfights():
     global mynick
     weechat.command(mingbuffer, "!bestfight %s" % (mynick))
+
+# have a ruck
+def fight(opponent):
+    global mynick
+    if opponent == mynick:
+        weechat.prnt(scriptbuffer, "Mingbeast can't get its act together - you need to find someone to fight!")
+        weechat.prnt(scriptbuffer, "")
+    else:
+        for _ in range(5):
+            weechat.command(botbuffer, "fight %s" % (opponent))
+
+# upgrade my stuff
+def upgradeitems():
+    weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
+    weechat.prnt(scriptbuffer, "")
+    weechat.command(botbuffer, "bank withdraw 2000")
+    weechat.command(botbuffer, "upgrade all 10")
+
+# take action (attack / challenge / slay)
+def takeaction(msg, creep, monster):
+    if "You can now ATTACK." in msg:
+        weechat.prnt(scriptbuffer, "%sAttacking..." % weechat.color("red, black"))
+        weechat.prnt(scriptbuffer, "")
+        weechat.command(botbuffer, "attack %s" % (creep))
+    if "You can now CHALLENGE." in msg:
+        weechat.prnt(scriptbuffer, "%sChallenging..." % weechat.color("red, black"))
+        weechat.prnt(scriptbuffer, "")
+        weechat.command(botbuffer, "challenge")
+    if "You can now SLAY." in msg:
+        weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
+        weechat.prnt(scriptbuffer, "")
+        weechat.command(botbuffer, "slay %s" % (monster))
+    callbot()
 
 # get digits
 def getdigits(msg):
@@ -149,22 +222,13 @@ def show_mrpgcounters(data, item, window):
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global mynick, myclass, mylevel, creep, monster, bank, ahook, chook, shook, lhook
+    global mynick, myclass, mylevel, creep, monster, bank, ahook, chook, shook, lhook, acount, ccount, scount
 
-    # Reset bot calling flag
-
-    needtocall = 0
-
-    # Wait, what, did we just log in?
-
+    # did we just login?
 
     if msg.startswith(mynick):
         if "has logged in" in msg:
-            needtocall = 1
-        if "and won!" in msg or "and lost!" in msg:
-            needtocall = 1
-        if "and killed it!" in msg:
-            needtocall = 1
+            callbot()
 
     # finance
 
@@ -174,11 +238,14 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             carry = getdigits(msg)[1]
             if carry > 40:
                 deposit = carry - 40
-                weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
-                weechat.prnt(scriptbuffer, "")
-                weechat.command(botbuffer, "bank deposit %s" % (deposit))
-        if "deposited" in msg or "withdrawn" in msg:
-            needtocall = 1
+                depositgold(deposit)
+                bank = bank + deposit
+
+    # Upgrade
+
+    if bank >= 2000:
+        upgradeitems()
+        bank = bank - 2000
 
     if msg.startswith("Power Potions:"):
         has_eng = getdigits(msg)[5]
@@ -188,31 +255,19 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         bets = getdigits(msg)[7]
         fights = getdigits(msg)[2]
         if eng_lvl < 9:
-            if has_eng == 0 and bank > 1500:
-                weechat.prnt(scriptbuffer, "%sHiring engineer..." % weechat.color("red, black"))
-                weechat.prnt(scriptbuffer, "")
-                weechat.command(botbuffer, "bank withdraw 1000")
-                weechat.command(botbuffer, "hire engineer")
-                needtocall = 1
+            if has_eng == 0 and bank > 1000:
+                hireengineer()
+                bank = bank - 1000
             if has_eng == 1 and bank > 200:
-                weechat.prnt(scriptbuffer, "%sUpgrading engineer..." % weechat.color("red, black"))
-                weechat.prnt(scriptbuffer, "")
-                weechat.command(botbuffer, "bank withdraw 200")
-                weechat.command(botbuffer, "engineer level")
-                needtocall = 1
+                upengineer()
+                bank = bank - 200
         if her_lvl < 9:
-            if has_her == 0 and bank > 1500:
-                weechat.prnt(scriptbuffer, "%sSummoning hero..." % weechat.color("red, black"))
-                weechat.prnt(scriptbuffer, "")
-                weechat.command(botbuffer, "bank withdraw 1000")
-                weechat.command(botbuffer, "summon hero")
-                needtocall = 1
+            if has_her == 0 and bank > 1000:
+                summonhero()
+                bank = bank - 1000
             if has_her == 1 and bank > 200:
-                weechat.prnt(scriptbuffer, "%sUpgrading hero..." % weechat.color("red, black"))
-                weechat.prnt(scriptbuffer, "")
-                weechat.command(botbuffer, "bank withdraw 200")
-                weechat.command(botbuffer, "hero level")
-                needtocall = 1
+                uphero()
+                bank = bank - 200
         if bets < 5 and mylevel[0] >= 30:
                 getbets()
         if fights < 5 and mylevel[0] >= 10:
@@ -226,9 +281,8 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         chunks = msg.split(" ")
         win = chunks[1]
         lose = chunks[2]
-        weechat.command(botbuffer, "bank withdraw 500")
-        for _ in range(5):
-            weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
+        gamble(win, lose)
+        bank = bank - 500
 
     # Fight
 
@@ -237,20 +291,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.prnt(scriptbuffer, "")
         chunks = msg.split(" ")
         opponent = chunks[1]
-        if opponent == mynick:
-            weechat.prnt(scriptbuffer, "Mingbeast can't get its act together - you need to find someone to fight!")
-            weechat.prnt(scriptbuffer, "")
-        else:
-            for _ in range(5):
-                weechat.command(botbuffer, "fight %s" % (opponent))
-
-    # Upgrade
-
-    if bank >= 2000:
-        weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
-        weechat.prnt(scriptbuffer, "")
-        weechat.command(botbuffer, "bank withdraw 2000")
-        weechat.command(botbuffer, "upgrade all 10")
+        fight(opponent)
 
     # display lines about me
 
@@ -286,18 +327,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     # take action
 
     if "You can now" in msg:
-        if "You can now ATTACK." in msg:
-            weechat.prnt(scriptbuffer, "%sAttacking..." % weechat.color("red, black"))
-            weechat.prnt(scriptbuffer, "")
-            weechat.command(botbuffer, "attack %s" % (creep))
-        if "You can now CHALLENGE." in msg:
-            weechat.prnt(scriptbuffer, "%sChallenging..." % weechat.color("red, black"))
-            weechat.prnt(scriptbuffer, "")
-            weechat.command(botbuffer, "challenge")
-        if "You can now SLAY." in msg:
-            weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
-            weechat.prnt(scriptbuffer, "")
-            weechat.command(botbuffer, "slay %s" % (monster))
+        takeaction(msg, creep, monster)
 
     # set hooks
 
@@ -314,20 +344,16 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
-    # if we need to, call the bot
-
-    if needtocall == 1:
-        callbot()
+    # return
 
     return weechat.WEECHAT_RC_OK
-
 #---------------------------------------------------------------------------#
 
 # initialise variables
 
 SCRIPT_NAME = 'weechat-multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '1.2'
+SCRIPT_VERSION = '2.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
