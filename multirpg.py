@@ -226,7 +226,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
     # did we just login?
 
-    if msg.startswith(mynick):
+    if mynick in msg:
         if "has logged in" in msg:
             callbot()
 
@@ -353,7 +353,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
 SCRIPT_NAME = 'weechat-multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '2.0'
+SCRIPT_VERSION = '2.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
