@@ -78,37 +78,37 @@ def uphero():
 
 # get creep for attack
 def getcreep(mylevel):
-    if mylevel >= 150:
+    if mylevel > 150:
         creep = "ogre"
-    elif mylevel >= 140:
+    elif mylevel > 140:
         creep = "wyvern"
-    elif mylevel >= 130:
+    elif mylevel > 130:
         creep = "beholder"
-    elif mylevel >= 120:
+    elif mylevel > 120:
         creep = "minotaur"
-    elif mylevel >= 110:
+    elif mylevel > 110:
         creep = "phoenix"
-    elif mylevel >= 100:
+    elif mylevel > 100:
         creep = "monkey"
-    elif mylevel >= 90:
+    elif mylevel > 90:
         creep = "mutant"
-    elif mylevel >= 80:
+    elif mylevel > 80:
         creep = "cyclops"
-    elif mylevel >= 70:
+    elif mylevel > 70:
         creep = "troll"
-    elif mylevel >= 60:
+    elif mylevel > 60:
         creep = "shadow"
-    elif mylevel >= 50:
+    elif mylevel > 50:
         creep = "ghost"
-    elif mylevel >= 40:
+    elif mylevel > 40:
         creep = "skeleton"
-    elif mylevel >= 30:
+    elif mylevel > 30:
         creep = "lich"
-    elif mylevel >= 20:
+    elif mylevel > 20:
         creep = "goblin"
-    elif mylevel >= 15:
+    elif mylevel > 15:
         creep = "spider"
-    elif mylevel >= 10:
+    elif mylevel > 10:
         creep = "locust"
     else:
         creep = "bush"
@@ -116,17 +116,17 @@ def getcreep(mylevel):
 
 # get monster for slay
 def getmonster(mysum):
-    if mysum >= 10000:
+    if mysum > 10000:
         monster = "hippogriff"
-    elif mysum >= 9000:
+    elif mysum > 9000:
         monster = "sphinx"
-    elif mysum >= 8000:
+    elif mysum > 8000:
         monster = "dragon"
-    elif mysum >= 7000:
+    elif mysum > 7000:
         monster = "vampire"
-    elif mysum >= 6000:
+    elif mysum > 6000:
         monster = "mammoth"
-    elif mysum >= 5000:
+    elif mysum > 5000:
         monster = "centaur"
     else:
         monster = "medusa"
@@ -353,7 +353,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
 SCRIPT_NAME = 'weechat-multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '2.1'
+SCRIPT_VERSION = '2.2'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
