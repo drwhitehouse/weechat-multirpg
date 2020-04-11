@@ -1,6 +1,11 @@
+#
+# weechat play bot for multirpg (multirpg.net)
+#
+
 # import my shiz
 import weechat
 import re
+import sys
 
 # callback for data received in input
 def buffer_input_cb(data, buffer, input_data):
@@ -44,8 +49,8 @@ def callbot():
 
 # deposit gold
 def depositgold(deposit):
-    weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
     weechat.prnt(scriptbuffer, "")
+    weechat.prnt(scriptbuffer, "Depositing: %s gold..." % (deposit))
     weechat.command(botbuffer, "bank deposit %s" % (deposit))
 
 # hire engineer
@@ -132,20 +137,14 @@ def getmonster(mysum):
         monster = "medusa"
     return monster
 
-# get opponents for gambling
-def getbets():
-    weechat.command(mingbuffer, "!bestbet")
-
 # gamble
-def gamble(win, lose):
+def gamble(winner, loser):
+    weechat.prnt(scriptbuffer, "%sBetting ..." % weechat.color("red, black"))
+    weechat.prnt(scriptbuffer, "")
     weechat.command(botbuffer, "bank withdraw 500")
     for _ in range(5):
-        weechat.command(botbuffer, "bet %s %s 100" % (win, lose))
+        weechat.command(botbuffer, "bet %s %s 100" % (winner, loser))
 
-# get opponent for fighting
-def getfights():
-    global mynick
-    weechat.command(mingbuffer, "!bestfight %s" % (mynick))
 
 # have a ruck
 def fight(opponent):
@@ -154,29 +153,31 @@ def fight(opponent):
         weechat.prnt(scriptbuffer, "Mingbeast can't get its act together - you need to find someone to fight!")
         weechat.prnt(scriptbuffer, "")
     else:
+        weechat.prnt(scriptbuffer, "")
+        weechat.prnt(scriptbuffer, "%sFighting ..." % weechat.color("red, black"))
         for _ in range(5):
             weechat.command(botbuffer, "fight %s" % (opponent))
 
 # upgrade my stuff
 def upgradeitems():
-    weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
     weechat.prnt(scriptbuffer, "")
+    weechat.prnt(scriptbuffer, "%sUpgrading items ..." % weechat.color("red, black"))
     weechat.command(botbuffer, "bank withdraw 2000")
     weechat.command(botbuffer, "upgrade all 10")
 
 # take action (attack / challenge / slay)
 def takeaction(msg, creep, monster):
     if "You can now ATTACK." in msg:
-        weechat.prnt(scriptbuffer, "%sAttacking..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
+        weechat.prnt(scriptbuffer, "%sAttacking..." % weechat.color("red, black"))
         weechat.command(botbuffer, "attack %s" % (creep))
     if "You can now CHALLENGE." in msg:
-        weechat.prnt(scriptbuffer, "%sChallenging..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
+        weechat.prnt(scriptbuffer, "%sChallenging..." % weechat.color("red, black"))
         weechat.command(botbuffer, "challenge")
     if "You can now SLAY." in msg:
-        weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
         weechat.prnt(scriptbuffer, "")
+        weechat.prnt(scriptbuffer, "%sSlaying..." % weechat.color("red, black"))
         weechat.command(botbuffer, "slay %s" % (monster))
     callbot()
 
@@ -215,114 +216,18 @@ def countdown(data,timer):
 
 # show counters for mrpgbar
 def show_mrpgcounters(data, item, window):
-    global acount, ccount, scount, lcount, bank
-    mycontent = "attack: %s challenge: %s slay: %s level: %s gold: %s" % (acount, ccount, scount, lcount, bank)
+    global acount, ccount, scount, lcount, bank, lines
+    mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, gold: %s, lines parsed: %s." % (acount, ccount, scount, lcount, bank, lines)
     return mycontent
 
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global mynick, myclass, mylevel, creep, monster, bank, ahook, chook, shook, lhook, acount, ccount, scount
+    global mynick, myclass, mylevel, creep, monster, bank, ahook, chook, shook, lhook, winner, loser, opponent, bets, fights, lines
 
-    # did we just login?
+    # increment line count
 
-    if mynick in msg:
-        if "has logged in" in msg:
-            callbot()
-
-    # finance
-
-    if msg.startswith("You have"):
-        if "gold in the bank" in msg:
-            bank = getdigits(msg)[0]
-            carry = getdigits(msg)[1]
-            if carry > 40:
-                deposit = carry - 40
-                depositgold(deposit)
-                bank = bank + deposit
-
-    # Upgrade
-
-    if bank >= 2000:
-        upgradeitems()
-        bank = bank - 2000
-
-    if msg.startswith("Power Potions:"):
-        has_eng = getdigits(msg)[5]
-        eng_lvl = getdigits(msg)[6]
-        has_her = getdigits(msg)[3]
-        her_lvl = getdigits(msg)[4]
-        bets = getdigits(msg)[7]
-        fights = getdigits(msg)[2]
-        if eng_lvl < 9:
-            if has_eng == 0 and bank > 1000:
-                hireengineer()
-                bank = bank - 1000
-            if has_eng == 1 and bank > 200:
-                upengineer()
-                bank = bank - 200
-        if her_lvl < 9:
-            if has_her == 0 and bank > 1000:
-                summonhero()
-                bank = bank - 1000
-            if has_her == 1 and bank > 200:
-                uphero()
-                bank = bank - 200
-        if bets < 5 and mylevel[0] >= 30:
-                getbets()
-        if fights < 5 and mylevel[0] >= 10:
-                getfights()
-
-    # Gamble
-
-    if msg.startswith("bestbet") and bank > 500:
-        weechat.prnt(scriptbuffer, "%sBetting ..." % weechat.color("red, black"))
-        weechat.prnt(scriptbuffer, "")
-        chunks = msg.split(" ")
-        win = chunks[1]
-        lose = chunks[2]
-        gamble(win, lose)
-        bank = bank - 500
-
-    # Fight
-
-    if msg.startswith("bestfight"):
-        weechat.prnt(scriptbuffer, "%sFighting ..." % weechat.color("red, black"))
-        weechat.prnt(scriptbuffer, "")
-        chunks = msg.split(" ")
-        opponent = chunks[1]
-        fight(opponent)
-
-    # display lines about me
-
-    if mynick in msg:
-        weechat.prnt(scriptbuffer, msg)
-        weechat.prnt(scriptbuffer, "")
-        if myclass in msg:
-            chunks = msg.split(". ")
-            for chunk in chunks:
-                if chunk.startswith("You are"):
-                    mylevel = getdigits(chunk)
-                    creep = getcreep(mylevel[0])
-                    weechat.prnt(scriptbuffer, "Attack target: %s" % (creep))
-                    weechat.prnt(scriptbuffer, "")
-                if chunk.startswith("Next level"):
-                    weechat.unhook(lhook)
-                    lhook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "level") # step in seconds
-
-    # get monster
-
-    if msg.startswith("Items:"):
-        chunks = msg.split(". ")
-        for chunk in chunks:
-            if chunk.startswith("Items:"):
-                bits = msg.split(", ")
-                for bit in bits:
-                    if bit.startswith("Total sum:"):
-                        mysum = getdigits(bit)
-                        monster = getmonster(mysum[0])
-                        weechat.prnt(scriptbuffer, "Slay target: %s" % (monster))
-                        weechat.prnt(scriptbuffer, "")
+    lines = lines + 1
 
     # take action
 
@@ -344,6 +249,97 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.unhook(shook)
                 shook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "slay") # step in seconds
 
+    # display lines about me
+
+    if mynick in msg:
+        weechat.prnt(scriptbuffer, "")
+        weechat.prnt(scriptbuffer, msg)
+        if "has logged in" in msg:
+            callbot()
+        if myclass in msg:
+            chunks = msg.split(". ")
+            for chunk in chunks:
+                if chunk.startswith("You are"):
+                    mylevel = getdigits(chunk)
+                    creep = getcreep(mylevel[0])
+                    weechat.prnt(scriptbuffer, "")
+                    weechat.prnt(scriptbuffer, "Attack target: %s" % (creep))
+                if chunk.startswith("Next level"):
+                    weechat.unhook(lhook)
+                    lhook = weechat.hook_timer(1 * 1000, 60, getseconds(chunk), "countdown", "level") # step in seconds
+            
+    # get monster
+
+    if msg.startswith("Items:"):
+        chunks = msg.split(". ")
+        for chunk in chunks:
+            if chunk.startswith("Items:"):
+                bits = msg.split(", ")
+                for bit in bits:
+                    if bit.startswith("Total sum:"):
+                        mysum = getdigits(bit)
+                        monster = getmonster(mysum[0])
+                        weechat.prnt(scriptbuffer, "")
+                        weechat.prnt(scriptbuffer, "Slay target: %s" % (monster))
+
+    if msg.startswith("Power Potions:"):
+        has_eng = getdigits(msg)[5]
+        eng_lvl = getdigits(msg)[6]
+        has_her = getdigits(msg)[3]
+        her_lvl = getdigits(msg)[4]
+        bets = getdigits(msg)[7]
+        fights = getdigits(msg)[2]
+        if eng_lvl < 9:
+            if has_eng == 0 and bank > 1000:
+                hireengineer()
+            if has_eng == 1 and bank > 200:
+                upengineer()
+        else:
+            if her_lvl < 9:
+                if has_her == 0 and bank > 1000:
+                    summonhero()
+                if has_her == 1 and bank > 200:
+                    uphero()
+        # fight and gamble
+
+        if fights == 0 and mylevel[0] > 9:
+            if opponent == "":
+                weechat.command(mingbuffer, "!bestfight %s" % (mynick))
+            else:
+                weechat.command(mingbuffer, "!bestfight %s" % (mynick))
+                fight(opponent)
+        if bets == 0 and mylevel[0] > 29:
+            if winner == "" and loser == "":
+                weechat.command(mingbuffer, "!bestbet")
+            else:
+                weechat.command(mingbuffer, "!bestbet")
+                gamble(winner, loser)
+
+    # Get gambling odds
+
+    if msg.startswith("bestbet"):
+        chunks = msg.split(" ")
+        winner = chunks[1]
+        loser = chunks[2]
+
+    # Get fight opponent
+
+    if msg.startswith("bestfight"):
+        chunks = msg.split(" ")
+        opponent = chunks[1]
+
+    # finance
+
+    if msg.startswith("You have"):
+        if "gold in the bank" in msg:
+            bank = getdigits(msg)[0]
+            carry = getdigits(msg)[1]
+            if carry > 40:
+                deposit = carry - 40
+                depositgold(deposit)
+            if bank >= 2000 and mylevel[0] > 14:
+                upgradeitems()
+
     # return
 
     return weechat.WEECHAT_RC_OK
@@ -351,9 +347,9 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
 # initialise variables
 
-SCRIPT_NAME = 'weechat-multirpg'
+SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '2.2'
+SCRIPT_VERSION = '2.3'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -371,6 +367,20 @@ monster = "medusa"
 
 # initialise bank account
 bank = 0
+
+# initialise winner / loser
+winner = ""
+loser = ""
+
+# initialise opponent
+opponent = ""
+
+# initialise bets / fights
+bets = 5
+fights = 5
+
+# initialise line count
+lines = 0
 
 # register the script
 weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", "")
@@ -395,6 +405,11 @@ weechat.buffer_set(scriptbuffer, "localvar_set_no_log", "1")
 weechat.prnt(scriptbuffer, "%sStarting weechat-multirpg..." % weechat.color("green,black"))
 weechat.prnt(scriptbuffer, "")
 weechat.prnt(scriptbuffer, "Version - %s" % SCRIPT_VERSION)
+weechat.prnt(scriptbuffer, "")
+pymajor = sys.version_info[0]
+pyminor = sys.version_info[1]
+pymicro = sys.version_info[2]
+weechat.prnt(scriptbuffer, "Python Version - %s.%s.%s" % (pymajor, pyminor, pymicro))
 weechat.prnt(scriptbuffer, "")
 
 # create channel buffer
@@ -426,5 +441,5 @@ mrpgcounters = weechat.bar_item_new("mrpgcounters", "show_mrpgcounters", "")
 ctrbar = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
             "0", "5", "default", "white", "blue", "off", "mrpgcounters")
 
-# Issue callbot command to kick us off...
+# Issue command to kick us off...
 callbot()
