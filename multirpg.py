@@ -305,7 +305,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         takeaction(int(mystats["attackttl"]), int(mystats["challengettl"]), int(mystats["slayttl"]), CREEP, MONSTER, int(mystats["level"]))
 
         # fightin' and bettin'
-        if int(mystats["fights"]) == 0 and int(mystats["level"]) > 9:
+        if int(mystats["fights"]) < 5 and int(mystats["level"]) > 9:
             if OPPONENT == "":
                 weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
             else:
@@ -313,7 +313,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 fight(OPPONENT)
                 callbot()
 
-        if int(mystats["bets"]) == 0 and int(mystats["level"]) > 29:
+        if int(mystats["bets"]) < 5 and int(mystats["level"]) > 29:
             if WINNER == "" and LOSER == "":
                 weechat.command(MINGBUFFER, "!bestbet")
             else:
