@@ -136,22 +136,22 @@ def getmonster(mysum):
     return MONSTER
 
 # gamble
-def gamble(WINNER, LOSER):
+def gamble(WINNER, LOSER, BETS):
     weechat.prnt(SCRIPTBUFFER, "%sBetting ..." % weechat.color("red, black"))
     weechat.prnt(SCRIPTBUFFER, "")
-    weechat.command(BOTBUFFER, "bank withdraw 500")
-    for _ in range(5):
+    for _ in range(5 - BETS):
+        weechat.command(BOTBUFFER, "bank withdraw 100")
         weechat.command(BOTBUFFER, "bet %s %s 100" % (WINNER, LOSER))
 
 # have a ruck
-def fight(OPPONENT):
+def fight(OPPONENT, FIGHTS):
     if OPPONENT == "":
         weechat.prnt(SCRIPTBUFFER, "Mingbeast can't get its act together - set MYOPPONENT in config file.")
         weechat.prnt(SCRIPTBUFFER, "")
     else:
         weechat.prnt(SCRIPTBUFFER, "%sFighting ..." % weechat.color("red, black"))
         weechat.prnt(SCRIPTBUFFER, "")
-        for _ in range(5):
+        for _ in range(5 - FIGHTS):
             weechat.command(BOTBUFFER, "fight %s" % (OPPONENT))
 
 # upgrade my stuff
@@ -224,7 +224,7 @@ def show_mrpgcounters(data, item, window):
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global MYNICK, MYOPPONENT, MYLEVEL, CREEP, MONSTER, BANK, AHOOK, CHOOK, SHOOK, LHOOK, WINNER, LOSER, OPPONENT, BETS, FIGHTS, LINES
+    global MYNICK, MYOPPONENT, MYLEVEL, CREEP, MONSTER, BANK, AHOOK, CHOOK, SHOOK, LHOOK, WINNER, LOSER, OPPONENT, LINES
 
     # increment line count
     LINES = LINES + 1
@@ -239,10 +239,10 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     if msg.startswith("bestfight"):
         chunks = msg.split(" ")
         OPPONENT = chunks[1]
-        if OPPONENT == MYNICK:
-            if MYOPPONENT != "":
-                OPPONENT = MYOPPONENT
-            else:
+        if MYOPPONENT != "":
+            OPPONENT = MYOPPONENT
+        else:
+            if OPPONENT == MYNICK:
                 OPPONENT = ""
 
     # refresh data
@@ -295,11 +295,11 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         weechat.unhook(AHOOK)
         AHOOK = weechat.hook_timer(1 * 1000, 60, ATTL, "countdown", "attack") # step in seconds
         weechat.unhook(CHOOK)
-        CHOOK = weechat.hook_timer(1 * 1000, 60,  CTTL, "countdown", "challenge") # step in seconds
+        CHOOK = weechat.hook_timer(1 * 1000, 60, CTTL, "countdown", "challenge") # step in seconds
         weechat.unhook(SHOOK)
-        SHOOK = weechat.hook_timer(1 * 1000, 60,  STTL, "countdown", "slay") # step in seconds
+        SHOOK = weechat.hook_timer(1 * 1000, 60, STTL, "countdown", "slay") # step in seconds
         weechat.unhook(LHOOK)
-        LHOOK = weechat.hook_timer(1 * 1000, 60,  LTTL, "countdown", "level") # step in seconds
+        LHOOK = weechat.hook_timer(1 * 1000, 60, LTTL, "countdown", "level") # step in seconds
 
         # take action
         takeaction(int(mystats["attackttl"]), int(mystats["challengettl"]), int(mystats["slayttl"]), CREEP, MONSTER, int(mystats["level"]))
@@ -310,7 +310,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
             else:
                 weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
-                fight(OPPONENT)
+                fight(OPPONENT, int(mystats["fights"]))
                 callbot()
 
         if int(mystats["bets"]) < 5 and int(mystats["level"]) > 29:
@@ -318,7 +318,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(MINGBUFFER, "!bestbet")
             else:
                 weechat.command(MINGBUFFER, "!bestbet")
-                gamble(WINNER, LOSER)
+                gamble(WINNER, LOSER, int(mystats["bets"]))
                 callbot()
 
     # display lines about me
@@ -335,7 +335,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '3.0'
+SCRIPT_VERSION = '3.0.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -360,10 +360,6 @@ LOSER = ""
 
 # initialise opponent
 OPPONENT = ""
-
-# initialise bets / fights
-BETS = 5
-FIGHTS = 5
 
 # initialise line count
 LINES = 0
