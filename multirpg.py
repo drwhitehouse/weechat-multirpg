@@ -182,22 +182,6 @@ def takeaction(attackttl, challengettl, slayttl, CREEP, MONSTER, level):
     if refresh == 1:
         callbot()
 
-# get digits
-def getdigits(msg):
-    digits = [int(s) for s in re.findall(r'\b\d+\b', msg)]
-    return digits
-
-# get seconds
-def getseconds(msg):
-    seconds = 0
-    digits = getdigits(msg)
-    seconds = seconds + digits[0] * 86400       # Days
-    seconds = seconds + digits[1] * 3600        # Hours
-    seconds = seconds + digits[2] * 60          # Minutes
-    seconds = seconds + digits[3]               # Seconds
-    seconds = seconds + 30                      # This isn't very accurate...
-    return seconds
-
 # countdown
 def countdown(data, timer):
     global ACOUNT, CCOUNT, SCOUNT, LCOUNT
@@ -225,6 +209,10 @@ def show_mrpgcounters(data, item, window):
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     global MYNICK, MYOPPONENT, MYLEVEL, CREEP, MONSTER, BANK, AHOOK, CHOOK, SHOOK, LHOOK, WINNER, LOSER, OPPONENT, LINES
+
+    # initialise call_me
+
+    call_me = 0
 
     # increment line count
     LINES = LINES + 1
@@ -311,7 +299,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             else:
                 weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
                 fight(OPPONENT, int(mystats["fights"]))
-                callbot()
+                call_me = 1
 
         if int(mystats["bets"]) < 5 and int(mystats["level"]) > 29:
             if WINNER == "" and LOSER == "":
@@ -319,14 +307,17 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             else:
                 weechat.command(MINGBUFFER, "!bestbet")
                 gamble(WINNER, LOSER, int(mystats["bets"]))
-                callbot()
+                call_me = 1
 
     # display lines about me
     if MYNICK in msg:
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
         if "has logged in" in msg:
-            callbot()
+            call_me = 1
+
+    if call_me == 1:
+        callbot()
 
     # return
     return weechat.WEECHAT_RC_OK
@@ -335,7 +326,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '3.0.1'
+SCRIPT_VERSION = '3.0.2'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
