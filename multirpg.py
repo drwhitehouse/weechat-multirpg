@@ -261,7 +261,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                     hireengineer()
                 if int(mystats["engineer"]) == 1 and BANK > 200:
                     upengineer()
-            if int(mystats["hlevel"]) < 9:
+            elif int(mystats["hlevel"]) < 9:
                 if int(mystats["hero"]) == 0 and BANK > 1000:
                     summonhero()
                 if int(mystats["hero"]) == 1 and BANK > 200:
@@ -293,7 +293,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         takeaction(int(mystats["attackttl"]), int(mystats["challengettl"]), int(mystats["slayttl"]), CREEP, MONSTER, int(mystats["level"]))
 
         # fightin' and bettin'
-        if int(mystats["fights"]) < 5 and int(mystats["level"]) > 9:
+        if int(mystats["fights"]) < 5 and int(mystats["level"]) > 9 and int(mystats["level"]) < 200:
             if OPPONENT == "":
                 weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
             else:
@@ -326,7 +326,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '3.0.2'
+SCRIPT_VERSION = '3.0.3'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
