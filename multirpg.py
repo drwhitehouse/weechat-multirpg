@@ -217,14 +217,13 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     # increment line count
     LINES = LINES + 1
 
-    # Get gambling odds
+    # Get gambling odds / fight opponent
     if msg.startswith("bestbet"):
         chunks = msg.split(" ")
         WINNER = chunks[1]
         LOSER = chunks[2]
 
-    # Get fight opponent
-    if msg.startswith("bestfight"):
+    elif msg.startswith("bestfight"):
         chunks = msg.split(" ")
         OPPONENT = chunks[1]
         if MYOPPONENT != "":
@@ -234,7 +233,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 OPPONENT = ""
 
     # refresh data
-    if msg.startswith("level "):
+    elif msg.startswith("level "):
         out = msg.split()
         mystats = dict([(x, y) for x, y in zip(out[::2], out[1::2])])
 
@@ -244,7 +243,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         if gold > 40:
             deposit = gold - 40
             depositgold(deposit)
-        if BANK >= 2000 and int(mystats["level"]) > 14:
+        elif BANK >= 2000 and int(mystats["level"]) > 14:
             upgradeitems()
 
         # get creep & monster
@@ -300,8 +299,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
                 weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
                 fight(OPPONENT, int(mystats["fights"]))
                 call_me = 1
-
-        if int(mystats["bets"]) < 5 and int(mystats["level"]) > 29:
+        elif int(mystats["bets"]) < 5 and int(mystats["level"]) > 29:
             if WINNER == "" and LOSER == "":
                 weechat.command(MINGBUFFER, "!bestbet")
             else:
@@ -326,7 +324,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '3.0.3'
+SCRIPT_VERSION = '3.0.4'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
