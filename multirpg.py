@@ -22,6 +22,15 @@ def unload_script_cb():
     # ...
     return weechat.WEECHAT_RC_OK
 
+# rawplayers3 callback
+def rawplayers3_cb(data, command, rc, out, err):
+    global RAWPLAYERS
+    if out != "":
+	RAWPLAYERS += out
+        if int(rc) >= 0:
+            weechat.prnt(SCRIPTBUFFER,"rawplayers3 data processed.")
+    return weechat.WEECHAT_RC_OK
+
 # initialise configuration
 def multirpg_config_init():
     global MULTIRPG_CONFIG_FILE, MULTIRPG_CONFIG_OPTION
@@ -44,6 +53,7 @@ def multirpg_config_read():
 # call bot for whoami & stats
 def callbot():
     weechat.command(BOTBUFFER, "rawstats2")
+    weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
 
 # deposit gold
 def depositgold(deposit):
@@ -328,6 +338,8 @@ SCRIPT_VERSION = '3.0.4'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
+RAWPLAYERS = ""
+ALLPLAYERS = {}
 
 # config file and options
 MULTIRPG_CONFIG_FILE = ""
