@@ -6,6 +6,7 @@
 import weechat
 import re
 import sys
+import random
 
 # callback for data received in input
 def buffer_input_cb(data, buffer, input_data):
@@ -22,14 +23,6 @@ def unload_script_cb():
     # ...
     return weechat.WEECHAT_RC_OK
 
-# rawplayers3 callback
-def rawplayers3_cb(data, command, rc, out, err):
-    global RAWPLAYERS
-    if out != "":
-	RAWPLAYERS += out
-        if int(rc) >= 0:
-            weechat.prnt(SCRIPTBUFFER,"rawplayers3 data processed.")
-    return weechat.WEECHAT_RC_OK
 
 # initialise configuration
 def multirpg_config_init():
@@ -53,7 +46,6 @@ def multirpg_config_read():
 # call bot for whoami & stats
 def callbot():
     weechat.command(BOTBUFFER, "rawstats2")
-    weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
 
 # deposit gold
 def depositgold(deposit):
@@ -215,6 +207,48 @@ def show_mrpgcounters(data, item, window):
     mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, bank: %s, lines parsed: %s." % (ACOUNT, CCOUNT, SCOUNT, LCOUNT, BANK, LINES)
     return mycontent
 
+#############################################################################
+
+# rawplayers3 callback
+def rawplayers3_cb(data, command, rc, out, err):
+    global RAWPLAYERS
+    if out != "":
+	RAWPLAYERS += out
+        if int(rc) >= 0:
+            get_allplayers()
+    return weechat.WEECHAT_RC_OK
+
+# get ALLPLAYERS
+def get_allplayers():
+	global RAWPLAYERS, ALLPLAYERS
+	player = ""
+        ALLPLAYERS = {}
+        myrawplayers = re.sub(r'\{[^{}]*\}', lambda x: x.group(0).replace(' ','_'), RAWPLAYERS)
+	for player in myrawplayers.splitlines():
+            playerstats = dict([(x, y) for x, y in zip(player.split()[::2], player.split()[1::2])])
+            ALLPLAYERS[playerstats['rank']] = playerstats
+        RAWPLAYERS = ""
+        get_stats()
+
+# get stats by MYNICK
+def get_stats():
+    global ALLPLAYERS, MYNICK
+    for player in ALLPLAYERS:
+        thisplayer = ALLPLAYERS[player]
+        if thisplayer['char'] == MYNICK:
+            weechat.prnt(SCRIPTBUFFER, str(thisplayer))
+            weechat.prnt(SCRIPTBUFFER, "")
+
+# get rawplayers3 from url
+
+def get_rawplayers3(data, timer):
+    weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
+    return weechat.WEECHAT_RC_OK
+
+#############################################################################
+
+
+
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
@@ -334,7 +368,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '3.0.4'
+SCRIPT_VERSION = '4.0.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -428,3 +462,13 @@ CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name}
 
 # Issue command to kick us off...
 callbot()
+
+# Rawplayers...
+
+# Issue command to kick us off with this new bullshit...
+get_rawplayers3("", "")
+
+# Get data every 5 minutes...
+seconds = random.randint(0,59)
+weechat.prnt(SCRIPTBUFFER, str(seconds))
+weechat.hook_timer(300 * 1000, seconds, 0, "get_rawplayers3", "")
