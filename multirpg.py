@@ -248,7 +248,7 @@ def get_stats():
             weechat.prnt(SCRIPTBUFFER, "")
             check_finances()
 
-# get bank & gold
+# get bank & gold - BANK here is legacy and needs removing!
 def check_finances():
     global my_player, BANK
     bank = int(my_player['bank'])
@@ -286,12 +286,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
     # increment line count
     LINES = LINES + 1
-
-#####
-
-#   BANK = int( my_player["bank"] )
-
-####
 
     # Get gambling odds / fight opponent
     if msg.startswith("bestbet"):
@@ -488,7 +482,7 @@ callbot()
 get_rawplayers3("", "")
 
 # Get data every 5 minutes...
-seconds = 0
-weechat.hook_timer(300 * 1000, seconds, 0, "get_rawplayers3", "")
+DELAY = 300
+weechat.hook_timer(DELAY * 1000, 0, 0, "get_rawplayers3", "")
 
 #############################################################################
