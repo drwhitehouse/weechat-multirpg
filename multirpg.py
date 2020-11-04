@@ -250,8 +250,9 @@ def get_stats():
 
 # get bank & gold
 def check_finances():
-    global my_player
+    global my_player, BANK
     bank = int(my_player['bank'])
+    BANK = bank
     gold = int(my_player['gold'])
     if gold > 40:
         my_deposit = gold - 40
@@ -288,7 +289,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
 #####
 
-    BANK = int( my_player["bank"] )
+#   BANK = int( my_player["bank"] )
 
 ####
 
