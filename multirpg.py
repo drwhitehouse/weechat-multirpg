@@ -281,7 +281,6 @@ def check_finances():
 #############################################################################
 
 
-
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
@@ -314,14 +313,12 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         out = msg.split()
         mystats = dict([(x, y) for x, y in zip(out[::2], out[1::2])])
 
-
         # get creep & monster
         CREEP = getcreep(int(mystats["level"]))
         MONSTER = getmonster(int(mystats["sum"]))
         weechat.prnt(SCRIPTBUFFER, "Attack target: %s" % (CREEP))
         weechat.prnt(SCRIPTBUFFER, "Slay target: %s" % (MONSTER))
         weechat.prnt(SCRIPTBUFFER, "")
-
 
         # set hooks
         ATTL = int(mystats["attackttl"])
