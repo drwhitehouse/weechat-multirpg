@@ -208,7 +208,7 @@ def show_mrpgcounters(data, item, window):
     a_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['regentm'])))
     c_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['challengetm'])))
     s_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['slaytm'])))
-    mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, bank: %s, lines parsed: %s." % (a_time, c_time, s_time, LCOUNT, my_player['bank'], LINES)
+    mycontent = "rank: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, level: %s." % (my_player['rank'], my_player['sum'], my_player['gold'], my_player['bank'], a_time, c_time, s_time, LCOUNT)
     return mycontent
 
 #############################################################################
