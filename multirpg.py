@@ -226,19 +226,25 @@ def rawplayers3_cb(data, command, rc, out, err):
 
 # get all_players
 def get_allplayers():
-	global raw_players, all_players
-	player = ""
-        all_players = {}
-        myrawplayers = re.sub(r'\{[^{}]*\}', lambda x: x.group(0).replace(' ','_'), raw_players)
-	for player in myrawplayers.splitlines():
-            playerstats = dict([(x, y) for x, y in zip(player.split()[::2], player.split()[1::2])])
-            all_players[playerstats['rank']] = playerstats
-        raw_players = ""
-        get_stats()
+    global raw_players, all_players
+    player = ""
+    all_players = {}
+    start_time = time.time()
+    myrawplayers = re.sub(r'\{[^{}]*\}', lambda x: x.group(0).replace(' ','_'), raw_players)
+    for player in myrawplayers.splitlines():
+        playerstats = dict([(x, y) for x, y in zip(player.split()[::2], player.split()[1::2])])
+        all_players[playerstats['rank']] = playerstats
+    raw_players = ""
+    end_time = time.time()
+    weechat.prnt(SCRIPTBUFFER,'')
+    weechat.prnt(SCRIPTBUFFER,'get_allplayers processing time: %s ' % (str(int(end_time - start_time))))
+    weechat.prnt(SCRIPTBUFFER,'')
+    get_stats()
 
 # get my_player
 def get_stats():
     global all_players, MYNICK, my_player
+    start_time = time.time()
     for player in all_players:
         this_player = all_players[player]
         if this_player['char'] == MYNICK:
@@ -246,7 +252,11 @@ def get_stats():
             my_player = this_player
             weechat.prnt(SCRIPTBUFFER, str(my_player))
             weechat.prnt(SCRIPTBUFFER, "")
-            check_finances()
+    end_time = time.time()
+    weechat.prnt(SCRIPTBUFFER,'')
+    weechat.prnt(SCRIPTBUFFER,'get_stats processing time: %s ' % (str(int(end_time - start_time))))
+    weechat.prnt(SCRIPTBUFFER,'')
+    check_finances()
 
 # get bank & gold - BANK here is legacy and needs removing!
 def check_finances():
@@ -378,7 +388,6 @@ SCRIPT_VERSION = '4.0.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
-
 
 #############################################################################
 
