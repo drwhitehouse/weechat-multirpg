@@ -205,11 +205,28 @@ def countdown(data, timer):
 def show_mrpgcounters(data, item, window):
     global LCOUNT, LINES, my_player
     time_now = int(time.time())
-    a_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['regentm'])))
-    c_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['challengetm'])))
-    s_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['slaytm'])))
-    mycontent = "rank: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, level: %s." % (my_player['rank'], my_player['sum'], my_player['gold'], my_player['bank'], a_time, c_time, s_time, LCOUNT)
-    return mycontent
+    if int(my_player['level']) > 9:
+        a_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['regentm'])))
+    else:
+        a_time = 'level 10'
+    if int(my_player['level']) > 34:
+        c_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['challengetm'])))
+    else:
+        c_time = 'level 35'
+    if int(my_player['level']) > 39:
+        s_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['slaytm'])))
+    else:
+        s_time = 'level 40'
+    my_content = "rank: %s, level: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, ttl: %s." % (my_player['rank'],
+                                                                                                                     my_player['level'],
+                                                                                                                     my_player['sum'],
+                                                                                                                     my_player['gold'],
+                                                                                                                     my_player['bank'],
+                                                                                                                     a_time,
+                                                                                                                     c_time,
+                                                                                                                     s_time,
+                                                                                                                     LCOUNT)
+    return my_content
 
 #############################################################################
 
