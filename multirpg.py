@@ -203,8 +203,8 @@ def countdown(data, timer):
 
 # show counters for mrpgbar
 def show_mrpgcounters(data, item, window):
-    global ACOUNT, CCOUNT, SCOUNT, LCOUNT, BANK, LINES
-    mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, bank: %s, lines parsed: %s." % (ACOUNT, CCOUNT, SCOUNT, LCOUNT, BANK, LINES)
+    global ACOUNT, CCOUNT, SCOUNT, LCOUNT, LINES, my_player
+    mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, bank: %s, lines parsed: %s." % (ACOUNT, CCOUNT, SCOUNT, LCOUNT, my_player['bank'], LINES)
     return mycontent
 
 #############################################################################
@@ -236,7 +236,6 @@ def get_allplayers():
         all_players[playerstats['rank']] = playerstats
     raw_players = ""
     end_time = time.time()
-    weechat.prnt(SCRIPTBUFFER,'')
     weechat.prnt(SCRIPTBUFFER,'get_allplayers processing time: %s ' % (str(int(end_time - start_time))))
     weechat.prnt(SCRIPTBUFFER,'')
     get_stats()
@@ -253,16 +252,14 @@ def get_stats():
             weechat.prnt(SCRIPTBUFFER, str(my_player))
             weechat.prnt(SCRIPTBUFFER, "")
     end_time = time.time()
-    weechat.prnt(SCRIPTBUFFER,'')
     weechat.prnt(SCRIPTBUFFER,'get_stats processing time: %s ' % (str(int(end_time - start_time))))
     weechat.prnt(SCRIPTBUFFER,'')
     check_finances()
 
-# get bank & gold - BANK here is legacy and needs removing!
+# get bank & gold
 def check_finances():
-    global my_player, BANK
+    global my_player
     bank = int(my_player['bank'])
-    BANK = bank
     gold = int(my_player['gold'])
     if gold > 40:
         my_deposit = gold - 40
@@ -288,7 +285,7 @@ def check_finances():
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global MYNICK, MYOPPONENT, MYLEVEL, CREEP, MONSTER, BANK, AHOOK, CHOOK, SHOOK, LHOOK, WINNER, LOSER, OPPONENT, LINES, my_player
+    global MYNICK, MYOPPONENT, MYLEVEL, CREEP, MONSTER, AHOOK, CHOOK, SHOOK, LHOOK, WINNER, LOSER, OPPONENT, LINES, my_player
 
     # initialise call_me
 
@@ -407,9 +404,6 @@ MYLEVEL = 0
 # initialise foes
 CREEP = "bush"
 MONSTER = "medusa"
-
-# initialise bank account
-BANK = 0
 
 # initialise winner / loser
 WINNER = ""
