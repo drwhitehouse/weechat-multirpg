@@ -203,8 +203,12 @@ def countdown(data, timer):
 
 # show counters for mrpgbar
 def show_mrpgcounters(data, item, window):
-    global ACOUNT, CCOUNT, SCOUNT, LCOUNT, LINES, my_player
-    mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, bank: %s, lines parsed: %s." % (ACOUNT, CCOUNT, SCOUNT, LCOUNT, my_player['bank'], LINES)
+    global LCOUNT, LINES, my_player
+    time_now = int(time.time())
+    a_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['regentm'])))
+    c_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['challengetm'])))
+    s_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['slaytm'])))
+    mycontent = "attack: %s, challenge: %s, slay: %s, level: %s, bank: %s, lines parsed: %s." % (a_time, c_time, s_time, LCOUNT, my_player['bank'], LINES)
     return mycontent
 
 #############################################################################
@@ -236,7 +240,7 @@ def get_allplayers():
         all_players[playerstats['rank']] = playerstats
     raw_players = ""
     end_time = time.time()
-    weechat.prnt(SCRIPTBUFFER,'get_allplayers processing time: %s ' % (str(int(end_time - start_time))))
+    weechat.prnt(SCRIPTBUFFER,'get_allplayers processing time: %s ' % (str(end_time - start_time)))
     weechat.prnt(SCRIPTBUFFER,'')
     get_stats()
 
@@ -252,7 +256,7 @@ def get_stats():
             weechat.prnt(SCRIPTBUFFER, str(my_player))
             weechat.prnt(SCRIPTBUFFER, "")
     end_time = time.time()
-    weechat.prnt(SCRIPTBUFFER,'get_stats processing time: %s ' % (str(int(end_time - start_time))))
+    weechat.prnt(SCRIPTBUFFER,'get_stats processing time: %s ' % (str(end_time - start_time)))
     weechat.prnt(SCRIPTBUFFER,'')
     check_finances()
 
