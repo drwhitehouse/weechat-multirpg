@@ -23,7 +23,6 @@ def unload_script_cb():
     # ...
     return weechat.WEECHAT_RC_OK
 
-
 # initialise configuration
 def multirpg_config_init():
     global MULTIRPG_CONFIG_FILE, MULTIRPG_CONFIG_OPTION
@@ -82,60 +81,60 @@ def uphero():
     weechat.command(BOTBUFFER, "hero level")
 
 # get creep for attack
-def getcreep(MYLEVEL):
-    if MYLEVEL > 150:
-        CREEP = "ogre"
-    elif MYLEVEL > 140:
-        CREEP = "wyvern"
-    elif MYLEVEL > 130:
-        CREEP = "beholder"
-    elif MYLEVEL > 120:
-        CREEP = "minotaur"
-    elif MYLEVEL > 110:
-        CREEP = "phoenix"
-    elif MYLEVEL > 100:
-        CREEP = "monkey"
-    elif MYLEVEL > 90:
-        CREEP = "mutant"
-    elif MYLEVEL > 80:
-        CREEP = "cyclops"
-    elif MYLEVEL > 70:
-        CREEP = "troll"
-    elif MYLEVEL > 60:
-        CREEP = "shadow"
-    elif MYLEVEL > 50:
-        CREEP = "ghost"
-    elif MYLEVEL > 40:
-        CREEP = "skeleton"
-    elif MYLEVEL > 30:
-        CREEP = "lich"
-    elif MYLEVEL > 20:
-        CREEP = "goblin"
-    elif MYLEVEL > 15:
-        CREEP = "spider"
-    elif MYLEVEL > 10:
-        CREEP = "locust"
+def getcreep(my_level):
+    if my_level > 150:
+        my_creep = "ogre"
+    elif my_level > 140:
+        my_creep = "wyvern"
+    elif my_level > 130:
+        my_creep = "beholder"
+    elif my_level > 120:
+        my_creep = "minotaur"
+    elif my_level > 110:
+        my_creep = "phoenix"
+    elif my_level > 100:
+        my_creep = "monkey"
+    elif my_level > 90:
+        my_creep = "mutant"
+    elif my_level > 80:
+        my_creep = "cyclops"
+    elif my_level > 70:
+        my_creep = "troll"
+    elif my_level > 60:
+        my_creep = "shadow"
+    elif my_level > 50:
+        my_creep = "ghost"
+    elif my_level > 40:
+        my_creep = "skeleton"
+    elif my_level > 30:
+        my_creep = "lich"
+    elif my_level > 20:
+        my_creep = "goblin"
+    elif my_level > 15:
+        my_creep = "spider"
+    elif my_level > 10:
+        my_creep = "locust"
     else:
-        CREEP = "bush"
-    return CREEP
+        my_creep = "bush"
+    return my_creep
 
 # get monster for slay
-def getmonster(mysum):
-    if mysum > 10000:
-        MONSTER = "hippogriff"
-    elif mysum > 9000:
-        MONSTER = "sphinx"
-    elif mysum > 8000:
-        MONSTER = "dragon"
-    elif mysum > 7000:
-        MONSTER = "vampire"
-    elif mysum > 6000:
-        MONSTER = "mammoth"
-    elif mysum > 5000:
-        MONSTER = "centaur"
+def getmonster(my_sum):
+    if my_sum > 10000:
+        my_monster = "hippogriff"
+    elif my_sum > 9000:
+        my_monster = "sphinx"
+    elif my_sum > 8000:
+        my_monster = "dragon"
+    elif my_sum > 7000:
+        my_monster = "vampire"
+    elif my_sum > 6000:
+        my_monster = "mammoth"
+    elif my_sum > 5000:
+        my_monster = "centaur"
     else:
-        MONSTER = "medusa"
-    return MONSTER
+        my_monster = "medusa"
+    return my_monster
 
 # gamble
 def gamble(WINNER, LOSER, BETS):
@@ -163,58 +162,27 @@ def upgradeitems():
     weechat.command(BOTBUFFER, "bank withdraw 2000")
     weechat.command(BOTBUFFER, "upgrade all 10")
 
-# take action (attack / challenge / slay)
-def takeaction(attackttl, challengettl, slayttl, CREEP, MONSTER, level):
-    refresh = 0
-    if attackttl < 1 and level > 9:
-        refresh = 1
-        weechat.prnt(SCRIPTBUFFER, "%sAttacking..." % weechat.color("red, black"))
-        weechat.prnt(SCRIPTBUFFER, "")
-        weechat.command(BOTBUFFER, "attack %s" % (CREEP))
-    if challengettl < 1 and level > 34:
-        refresh = 1
-        weechat.prnt(SCRIPTBUFFER, "%sChallenging..." % weechat.color("red, black"))
-        weechat.prnt(SCRIPTBUFFER, "")
-        weechat.command(BOTBUFFER, "challenge")
-    if slayttl < 1 and level > 39:
-        refresh = 1
-        weechat.prnt(SCRIPTBUFFER, "%sSlaying..." % weechat.color("red, black"))
-        weechat.prnt(SCRIPTBUFFER, "")
-        weechat.command(BOTBUFFER, "slay %s" % (MONSTER))
-    if refresh == 1:
-        callbot()
-
 # countdown
 def countdown(data, timer):
-    global ACOUNT, CCOUNT, SCOUNT, LCOUNT
-    if data == "attack":
-        ACOUNT = timer
-    if data == "challenge":
-        CCOUNT = timer
-    if data == "slay":
-        SCOUNT = timer
-    if data == "level":
-        LCOUNT = timer
-    if int(timer) == 0:
-        callbot()
-    else:
-        weechat.bar_item_update("MRPGCOUNTERS")
+    global my_ttl
+    my_ttl = timer	
+    weechat.bar_item_update("MRPGCOUNTERS")
     return weechat.WEECHAT_RC_OK
 
 # show counters for mrpgbar
 def show_mrpgcounters(data, item, window):
-    global LCOUNT, LINES, my_player
+    global my_player
     time_now = int(time.time())
     if int(my_player['level']) > 9:
-        a_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['regentm'])))
+        a_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['regentm']) - time_now))
     else:
         a_time = 'level 10'
     if int(my_player['level']) > 34:
-        c_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['challengetm'])))
+        c_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['challengetm']) - time_now))
     else:
         c_time = 'level 35'
     if int(my_player['level']) > 39:
-        s_time = time.strftime('%H:%M:%S %D', time.localtime(int(my_player['slaytm'])))
+        s_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['slaytm']) - time_now))
     else:
         s_time = 'level 40'
     my_content = "rank: %s, level: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, ttl: %s." % (my_player['rank'],
@@ -225,7 +193,7 @@ def show_mrpgcounters(data, item, window):
                                                                                                                      a_time,
                                                                                                                      c_time,
                                                                                                                      s_time,
-                                                                                                                     LCOUNT)
+                                                                                                                     my_ttl)
     return my_content
 
 #############################################################################
@@ -250,31 +218,23 @@ def get_allplayers():
     global raw_players, all_players
     player = ""
     all_players = {}
-    start_time = time.time()
     myrawplayers = re.sub(r'\{[^{}]*\}', lambda x: x.group(0).replace(' ','_'), raw_players)
     for player in myrawplayers.splitlines():
         playerstats = dict([(x, y) for x, y in zip(player.split()[::2], player.split()[1::2])])
         all_players[playerstats['rank']] = playerstats
     raw_players = ""
-    end_time = time.time()
-    weechat.prnt(SCRIPTBUFFER,'get_allplayers processing time: %s ' % (str(end_time - start_time)))
-    weechat.prnt(SCRIPTBUFFER,'')
     get_stats()
 
 # get my_player
 def get_stats():
-    global all_players, MYNICK, my_player
-    start_time = time.time()
+    global all_players, MYNICK, my_player, level_hook
     for player in all_players:
         this_player = all_players[player]
         if this_player['char'] == MYNICK:
             time_now = int(time.time())
             my_player = this_player
-            weechat.prnt(SCRIPTBUFFER, str(my_player))
-            weechat.prnt(SCRIPTBUFFER, "")
-    end_time = time.time()
-    weechat.prnt(SCRIPTBUFFER,'get_stats processing time: %s ' % (str(end_time - start_time)))
-    weechat.prnt(SCRIPTBUFFER,'')
+	    weechat.unhook(level_hook)
+            level_hook = weechat.hook_timer(1 * 1000, 60, int(my_player['ttl']), "countdown", "") # step in seconds
     check_finances()
 
 # get bank & gold
@@ -286,18 +246,41 @@ def check_finances():
         my_deposit = gold - 40
         depositgold(my_deposit)
     elif int(my_player['level']) > 14:
-        if int(my_player["englevel"]) < 9:
-            if int(my_player["engineer"]) == 0 and bank > 1000:
+        if int(my_player['englevel']) < 9:
+            if int(my_player['engineer']) == 0 and bank > 1000:
                 hireengineer()
-            if int(my_player["engineer"]) == 1 and bank > 200:
+            if int(my_player['engineer']) == 1 and bank > 200:
                 upengineer()
-        elif int(my_player["hlevel"]) < 9:
-            if int(my_player["hero"]) == 0 and bank > 1000:
+        elif int(my_player['hlevel']) < 9:
+            if int(my_player['hero']) == 0 and bank > 1000:
                 summonhero()
-            if int(my_player["hero"]) == 1 and bank > 200:
+            if int(my_player['hero']) == 1 and bank > 200:
                 uphero()
         elif bank >= 2000:
             upgradeitems()
+    takeaction()
+
+# take action (attack / challenge / slay)
+def takeaction():
+    global my_player
+    time_now = int(time.time())
+    if int(my_player['level']) > 9:
+	if time_now > int(my_player['regentm']):
+            my_creep = getcreep(int(my_player["level"]))
+            weechat.prnt(SCRIPTBUFFER, "%sAttacking..." % weechat.color("red, black"))
+            weechat.prnt(SCRIPTBUFFER, "")
+            weechat.command(BOTBUFFER, "attack %s" % (my_creep))
+    if int(my_player['level']) > 34:
+	if time_now > int(my_player['challengetm']):
+            my_monster = getmonster(int(my_player["sum"]))
+            weechat.prnt(SCRIPTBUFFER, "%sChallenging..." % weechat.color("red, black"))
+            weechat.prnt(SCRIPTBUFFER, "")
+            weechat.command(BOTBUFFER, "challenge")
+    if int(my_player['level']) > 39:
+	if time_now > int(my_player['slaytm']):
+            weechat.prnt(SCRIPTBUFFER, "%sSlaying..." % weechat.color("red, black"))
+            weechat.prnt(SCRIPTBUFFER, "")
+            weechat.command(BOTBUFFER, "slay %s" % (my_monster))
 
 #############################################################################
 
@@ -305,7 +288,7 @@ def check_finances():
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global MYNICK, MYOPPONENT, MYLEVEL, CREEP, MONSTER, AHOOK, CHOOK, SHOOK, LHOOK, WINNER, LOSER, OPPONENT, LINES, my_player
+    global MYNICK, MYOPPONENT, WINNER, LOSER, OPPONENT, LINES, my_player
 
     # initialise call_me
 
@@ -333,38 +316,6 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     elif msg.startswith("level "):
         out = msg.split()
         mystats = dict([(x, y) for x, y in zip(out[::2], out[1::2])])
-
-        # get creep & monster
-        CREEP = getcreep(int(mystats["level"]))
-        MONSTER = getmonster(int(mystats["sum"]))
-        weechat.prnt(SCRIPTBUFFER, "Attack target: %s" % (CREEP))
-        weechat.prnt(SCRIPTBUFFER, "Slay target: %s" % (MONSTER))
-        weechat.prnt(SCRIPTBUFFER, "")
-
-        # set hooks
-        ATTL = int(mystats["attackttl"])
-        CTTL = int(mystats["challengettl"])
-        STTL = int(mystats["slayttl"])
-        LTTL = int(mystats["ttl"]) + 300
-
-        if int(mystats["level"]) > 9:
-            ATTL = ATTL + 300
-        if int(mystats["level"]) > 34:
-            CTTL = CTTL + 300
-        if int(mystats["level"]) > 39:
-            STTL = STTL + 300
-
-        weechat.unhook(AHOOK)
-        AHOOK = weechat.hook_timer(1 * 1000, 60, ATTL, "countdown", "attack") # step in seconds
-        weechat.unhook(CHOOK)
-        CHOOK = weechat.hook_timer(1 * 1000, 60, CTTL, "countdown", "challenge") # step in seconds
-        weechat.unhook(SHOOK)
-        SHOOK = weechat.hook_timer(1 * 1000, 60, STTL, "countdown", "slay") # step in seconds
-        weechat.unhook(LHOOK)
-        LHOOK = weechat.hook_timer(1 * 1000, 60, LTTL, "countdown", "level") # step in seconds
-
-        # take action
-        takeaction(int(mystats["attackttl"]), int(mystats["challengettl"]), int(mystats["slayttl"]), CREEP, MONSTER, int(mystats["level"]))
 
         # fightin' and bettin'
         if int(mystats["fights"]) < 5 and int(mystats["level"]) > 9 and int(mystats["level"]) < 200:
@@ -409,19 +360,14 @@ CONFIG_FILE_NAME = "multirpg"
 raw_players = ""
 all_players = {}
 my_player = {}
+level_hook = ""
+my_ttl = 0
 
 #############################################################################
 
 # config file and options
 MULTIRPG_CONFIG_FILE = ""
 MULTIRPG_CONFIG_OPTION = {}
-
-# initialise MYLEVEL
-MYLEVEL = 0
-
-# initialise foes
-CREEP = "bush"
-MONSTER = "medusa"
 
 # initialise winner / loser
 WINNER = ""
@@ -477,17 +423,7 @@ weechat.command(CHANBUFFER, "/query Mingbeast")
 MINGBUFFER = weechat.current_buffer()
 
 # initialise hooks
-AHOOK = ""
-CHOOK = ""
-SHOOK = ""
-LHOOK = ""
 PHOOK = weechat.hook_print("", "notify_private,nick_multirpg,nick_Mingbeast", "", 0, "msgparser", "")
-
-# initialise counters
-ACOUNT = 0
-CCOUNT = 0
-SCOUNT = 0
-LCOUNT = 0
 
 # setup bar
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
