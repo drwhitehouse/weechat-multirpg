@@ -272,12 +272,12 @@ def takeaction():
             weechat.command(BOTBUFFER, "attack %s" % (my_creep))
     if int(my_player['level']) > 34:
 	if time_now > int(my_player['challengetm']):
-            my_monster = getmonster(int(my_player["sum"]))
             weechat.prnt(SCRIPTBUFFER, "%sChallenging..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "challenge")
     if int(my_player['level']) > 39:
 	if time_now > int(my_player['slaytm']):
+            my_monster = getmonster(int(my_player["sum"]))
             weechat.prnt(SCRIPTBUFFER, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "slay %s" % (my_monster))
