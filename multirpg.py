@@ -7,6 +7,7 @@ import weechat
 import re
 import sys
 import time
+from datetime import datetime, timedelta
 
 # callback for data received in input
 def buffer_input_cb(data, buffer, input_data):
@@ -162,6 +163,10 @@ def upgradeitems():
     weechat.command(BOTBUFFER, "bank withdraw 2000")
     weechat.command(BOTBUFFER, "upgrade all 10")
 
+# get ttl time
+def ttl_time(ttl):
+    return str(timedelta(seconds = ttl))
+
 # countdown
 def countdown(data, timer):
     global my_ttl
@@ -173,15 +178,15 @@ def countdown(data, timer):
 def show_mrpgcounters(data, item, window):
     time_now = int(time.time())
     if int(my_player['level']) > 9:
-        a_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['regentm']) - time_now))
+	a_time = int(my_player['regentm']) - time_now
     else:
         a_time = 'level 10'
     if int(my_player['level']) > 34:
-        c_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['challengetm']) - time_now))
+	c_time = int(my_player['challengetm']) - time_now
     else:
         c_time = 'level 35'
     if int(my_player['level']) > 39:
-        s_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['slaytm']) - time_now))
+	s_time = int(my_player['slaytm']) - time_now
     else:
         s_time = 'level 40'
     my_content = "rank: %s, level: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, ttl: %s." % (my_player['rank'],
@@ -189,9 +194,9 @@ def show_mrpgcounters(data, item, window):
                                                                                                                      my_player['sum'],
                                                                                                                      my_player['gold'],
                                                                                                                      my_player['bank'],
-                                                                                                                     a_time,
-                                                                                                                     c_time,
-                                                                                                                     s_time,
+                                                                                                                     ttl_time(a_time),
+                                                                                                                     ttl_time(c_time),
+                                                                                                                     ttl_time(s_time),
                                                                                                                      my_ttl)
     return my_content
 
