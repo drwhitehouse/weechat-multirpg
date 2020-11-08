@@ -171,7 +171,6 @@ def countdown(data, timer):
 
 # show counters for mrpgbar
 def show_mrpgcounters(data, item, window):
-    global my_player
     time_now = int(time.time())
     if int(my_player['level']) > 9:
         a_time = time.strftime("%H:%M:%S", time.gmtime(int(my_player['regentm']) - time_now))
@@ -211,6 +210,11 @@ def rawplayers3_cb(data, command, rc, out, err):
 	raw_players += out
         if int(rc) >= 0:
             get_allplayers()
+            get_stats()
+            check_finances()
+            takeaction()
+            betting()
+            fighting()
     return weechat.WEECHAT_RC_OK
 
 # get all_players
@@ -223,11 +227,10 @@ def get_allplayers():
         playerstats = dict([(x, y) for x, y in zip(player.split()[::2], player.split()[1::2])])
         all_players[playerstats['rank']] = playerstats
     raw_players = ""
-    get_stats()
 
 # get my_player
 def get_stats():
-    global all_players, MYNICK, my_player, level_hook
+    global my_player, level_hook
     for player in all_players:
         this_player = all_players[player]
         if this_player['char'] == MYNICK:
@@ -235,11 +238,9 @@ def get_stats():
             my_player = this_player
 	    weechat.unhook(level_hook)
             level_hook = weechat.hook_timer(1 * 1000, 60, int(my_player['ttl']), "countdown", "") # step in seconds
-    check_finances()
 
 # get bank & gold
 def check_finances():
-    global my_player
     bank = int(my_player['bank'])
     gold = int(my_player['gold'])
     if gold > 40:
@@ -258,11 +259,9 @@ def check_finances():
                 uphero()
         elif bank >= 2000:
             upgradeitems()
-    takeaction()
 
 # take action (attack / challenge / slay)
 def takeaction():
-    global my_player
     time_now = int(time.time())
     if int(my_player['level']) > 9:
 	if time_now > int(my_player['regentm']):
@@ -282,20 +281,30 @@ def takeaction():
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "slay %s" % (my_monster))
 
+def betting():
+    if int(my_player["bets"]) < 5 and int(my_player["level"]) > 29:
+        if WINNER == "" and LOSER == "":
+            weechat.command(MINGBUFFER, "!bestbet")
+        else:
+            weechat.command(MINGBUFFER, "!bestbet")
+            gamble(WINNER, LOSER, int(my_player["bets"]))
+
+def fighting():
+    if int(my_player['level']) > 9 and int(my_player['level']) < 200:
+        if int(my_player['fights']) < 5:
+            if OPPONENT == "":
+                weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
+            else:
+                weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
+                fight(OPPONENT, int(my_player["fights"]))
+
 #############################################################################
 
 
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global MYNICK, MYOPPONENT, WINNER, LOSER, OPPONENT, LINES, my_player
-
-    # initialise call_me
-
-    call_me = 0
-
-    # increment line count
-    LINES = LINES + 1
+    global WINNER, LOSER, OPPONENT
 
     # Get gambling odds / fight opponent
     if msg.startswith("bestbet"):
@@ -312,36 +321,15 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             if OPPONENT == MYNICK:
                 OPPONENT = ""
 
-    # refresh data
-    elif msg.startswith("level "):
+    # legacy rawstats2 parser
+    if msg.startswith("level "):
         out = msg.split()
         mystats = dict([(x, y) for x, y in zip(out[::2], out[1::2])])
-
-        # fightin' and bettin'
-        if int(mystats["fights"]) < 5 and int(mystats["level"]) > 9 and int(mystats["level"]) < 200:
-            if OPPONENT == "":
-                weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
-            else:
-                weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
-                fight(OPPONENT, int(mystats["fights"]))
-                call_me = 1
-        elif int(mystats["bets"]) < 5 and int(mystats["level"]) > 29:
-            if WINNER == "" and LOSER == "":
-                weechat.command(MINGBUFFER, "!bestbet")
-            else:
-                weechat.command(MINGBUFFER, "!bestbet")
-                gamble(WINNER, LOSER, int(mystats["bets"]))
-                call_me = 1
 
     # display lines about me
     if MYNICK in msg:
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
-        if "has logged in" in msg:
-            call_me = 1
-
-    if call_me == 1:
-        callbot()
 
     # return
     return weechat.WEECHAT_RC_OK
@@ -375,9 +363,6 @@ LOSER = ""
 
 # initialise opponent
 OPPONENT = ""
-
-# initialise line count
-LINES = 0
 
 # register the script
 weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", "")
@@ -429,9 +414,6 @@ PHOOK = weechat.hook_print("", "notify_private,nick_multirpg,nick_Mingbeast", ""
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
 CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
                          "0", "5", "default", "white", "blue", "off", "MRPGCOUNTERS")
-
-# Issue command to kick us off...
-callbot()
 
 #############################################################################
 
