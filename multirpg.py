@@ -214,6 +214,7 @@ def rawplayers3_cb(data, command, rc, out, err):
             check_finances()
             takeaction()
             betting()
+            getopponent()
             fighting()
     return weechat.WEECHAT_RC_OK
 
@@ -289,6 +290,44 @@ def betting():
             weechat.command(MINGBUFFER, "!bestbet")
             gamble(WINNER, LOSER, int(my_player["bets"]))
 
+def getopponent():
+    global OPPONENT
+    candidates = {}
+    final_selection = {}
+    keylist = []
+
+    # Get all players my level or above who aren't me or on my team and key by rank.
+
+    for player in all_players:
+        this_player = all_players[player]
+        if int(this_player['level']) >= int(my_player['level']):
+            if this_player['char'] != MYNICK and this_player['team'] != my_player['team']:
+                candidates[this_player['rank']] = this_player
+
+    # Go through the candidates calculating and keying by effective sum.
+
+    for candidate in candidates:
+        this_candidate = candidates[candidate]
+        bonus = int(0.1 * int(this_candidate['sum']))
+        if this_candidate['align'] == "g":
+            effective_sum = int(this_candidate['sum']) + bonus
+        elif this_candidate['align'] == "e":
+            effective_sum = int(this_candidate['sum']) - bonus
+        else:
+            effective_sum = int(this_candidate['sum'])
+        final_selection[str(effective_sum)] = this_candidate
+
+    # Go through that getting a list of the keys.
+
+    for finalist in final_selection:
+        keylist.append(int(finalist))
+        keylist.sort()
+    my_guy = keylist[0]
+    my_dude = final_selection[str(my_guy)]
+    OPPONENT = my_dude['char']
+    weechat.prnt(SCRIPTBUFFER, "By my reckoning you should try and slap the shit out of: %s" % (OPPONENT))
+    weechat.prnt(SCRIPTBUFFER, "")
+
 def fighting():
     if int(my_player['level']) > 9 and int(my_player['level']) < 200:
         if int(my_player['fights']) < 5:
@@ -338,7 +377,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '5.0.0'
+SCRIPT_VERSION = '5.0.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
