@@ -325,16 +325,23 @@ def getopponent():
     my_guy = keylist[0]
     my_dude = final_selection[str(my_guy)]
     OPPONENT = my_dude['char']
-    weechat.prnt(SCRIPTBUFFER, "By my reckoning you should try and slap the shit out of: %s" % (OPPONENT))
-    weechat.prnt(SCRIPTBUFFER, "")
+    mybonus = int(0.1 * int(my_player['sum']))
+    if my_player['align'] == "g":
+        my_effective_sum = int(my_player['sum']) + mybonus
+    elif my_player['align'] == "e":
+        my_effective_sum = int(my_player['sum']) - mybonus
+    else:
+        my_effective_sum = int(my_player['sum'])
+    if my_effective_sum < int(my_guy):
+        OPPONENT = ""
 
 def fighting():
     if int(my_player['level']) > 9 and int(my_player['level']) < 200:
         if int(my_player['fights']) < 5:
             if OPPONENT == "":
-                weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
+                weechat.prnt(SCRIPTBUFFER, "No suitable opponent...")
+                weechat.prnt(SCRIPTBUFFER, "")
             else:
-                weechat.command(MINGBUFFER, "!bestfight %s" % (MYNICK))
                 fight(OPPONENT, int(my_player["fights"]))
 
 #############################################################################
@@ -351,6 +358,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
         WINNER = chunks[1]
         LOSER = chunks[2]
 
+    # legacy fight parser - to delete
     elif msg.startswith("bestfight"):
         chunks = msg.split(" ")
         OPPONENT = chunks[1]
@@ -360,7 +368,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
             if OPPONENT == MYNICK:
                 OPPONENT = ""
 
-    # legacy rawstats2 parser
+    # legacy rawstats2 parser - to delete
     if msg.startswith("level "):
         out = msg.split()
         mystats = dict([(x, y) for x, y in zip(out[::2], out[1::2])])
