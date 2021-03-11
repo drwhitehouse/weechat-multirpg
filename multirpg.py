@@ -300,9 +300,10 @@ def getopponent():
 
     for player in all_players:
         this_player = all_players[player]
-        if int(this_player['level']) >= int(my_player['level']):
-            if this_player['char'] != MYNICK and this_player['team'] != my_player['team']:
-                candidates[this_player['rank']] = this_player
+        if int(this_player['online']) == 1:
+            if int(this_player['level']) >= int(my_player['level']):
+                if this_player['char'] != MYNICK and this_player['team'] != my_player['team']:
+                    candidates[this_player['rank']] = this_player
 
     # Go through the candidates calculating and keying by effective sum.
 
@@ -385,7 +386,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '5.0.1'
+SCRIPT_VERSION = '5.0.2'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
