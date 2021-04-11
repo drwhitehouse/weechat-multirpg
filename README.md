@@ -12,4 +12,4 @@ Useage:
 7. ...
 8. Profit?
 
-OPPONENT setting in script will be deprecated.
+

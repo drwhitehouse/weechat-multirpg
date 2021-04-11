@@ -34,7 +34,7 @@ def multirpg_config_init():
         weechat.config_free(MULTIRPG_CONFIG_FILE)
         return
     MULTIRPG_CONFIG_OPTION["MYNICK"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE, section_multirpg, "MYNICK", "string", "multirpg nickname", "", 0, 0, "", "", 0, "", "", "", "", "", "")
-    MULTIRPG_CONFIG_OPTION["MYOPPONENT"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE, section_multirpg, "MYOPPONENT", "string", "multirpg class", "", 0, 0, "", "", 0, "", "", "", "", "", "")
+    MULTIRPG_CONFIG_OPTION["MYALIGNMENT"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE, section_multirpg, "MYALIGNMENT", "string", "multirpg class", "", 0, 0, "", "", 0, "", "", "", "", "", "")
     MULTIRPG_CONFIG_OPTION["IRCSERVER"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE, section_multirpg, "IRCSERVER", "string", "multirpg IRCSERVER", "", 0, 0, "", "", 0, "", "", "", "", "", "")
 
 # read config file
@@ -147,7 +147,7 @@ def gamble(WINNER, LOSER, BETS):
 # have a ruck
 def fight(OPPONENT, FIGHTS):
     if OPPONENT == "":
-        weechat.prnt(SCRIPTBUFFER, "Mingbeast can't get its act together - set MYOPPONENT in config file.")
+        weechat.prnt(SCRIPTBUFFER, "Mingbeast can't get its act together - set MYALIGNMENT in config file.")
         weechat.prnt(SCRIPTBUFFER, "")
     else:
         weechat.prnt(SCRIPTBUFFER, "%sFighting ..." % weechat.color("red, black"))
@@ -195,8 +195,6 @@ def show_mrpgcounters(data, item, window):
                                                                                                                      my_ttl)
     return my_content
 
-#############################################################################
-
 # get rawplayers3 from url
 
 def get_rawplayers3(data, timer):
@@ -216,6 +214,7 @@ def rawplayers3_cb(data, command, rc, out, err):
             betting()
             getopponent()
             fighting()
+            fixhook()
     return weechat.WEECHAT_RC_OK
 
 # get all_players
@@ -231,14 +230,11 @@ def get_allplayers():
 
 # get my_player
 def get_stats():
-    global my_player, level_hook
+    global my_player
     for player in all_players:
         this_player = all_players[player]
         if this_player['char'] == MYNICK:
-            time_now = int(time.time())
             my_player = this_player
-	    weechat.unhook(level_hook)
-            level_hook = weechat.hook_timer(1 * 1000, 60, int(my_player['ttl']), "countdown", "") # step in seconds
 
 # get bank & gold
 def check_finances():
@@ -345,34 +341,21 @@ def fighting():
             else:
                 fight(OPPONENT, int(my_player["fights"]))
 
-#############################################################################
-
+def fixhook():
+    global level_hook
+    weechat.unhook(level_hook)
+    level_hook = weechat.hook_timer(1 * 1000, 60, int(my_player['ttl']), "countdown", "") # step in seconds
 
 #---------------------------------------------------------------------------#
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     global WINNER, LOSER, OPPONENT
 
-    # Get gambling odds / fight opponent
+    # Get gambling odds
     if msg.startswith("bestbet"):
         chunks = msg.split(" ")
         WINNER = chunks[1]
         LOSER = chunks[2]
-
-    # legacy fight parser - to delete
-    elif msg.startswith("bestfight"):
-        chunks = msg.split(" ")
-        OPPONENT = chunks[1]
-        if MYOPPONENT != "":
-            OPPONENT = MYOPPONENT
-        else:
-            if OPPONENT == MYNICK:
-                OPPONENT = ""
-
-    # legacy rawstats2 parser - to delete
-    if msg.startswith("level "):
-        out = msg.split()
-        mystats = dict([(x, y) for x, y in zip(out[::2], out[1::2])])
 
     # display lines about me
     if MYNICK in msg:
@@ -386,20 +369,16 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '5.0.2'
+SCRIPT_VERSION = '5.1.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
-
-#############################################################################
 
 raw_players = ""
 all_players = {}
 my_player = {}
 level_hook = ""
 my_ttl = 0
-
-#############################################################################
 
 # config file and options
 MULTIRPG_CONFIG_FILE = ""
@@ -419,7 +398,7 @@ weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCR
 multirpg_config_init()
 multirpg_config_read()
 MYNICK = weechat.config_string(MULTIRPG_CONFIG_OPTION['MYNICK'])
-MYOPPONENT = weechat.config_string(MULTIRPG_CONFIG_OPTION['MYOPPONENT'])
+MYALIGNMENT = weechat.config_string(MULTIRPG_CONFIG_OPTION['MYALIGNMENT'])
 IRCSERVER = weechat.config_string(MULTIRPG_CONFIG_OPTION['IRCSERVER'])
 
 # create script buffer
