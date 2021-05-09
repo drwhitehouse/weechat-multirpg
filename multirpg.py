@@ -144,11 +144,10 @@ def gamble(WINNER, LOSER):
     weechat.command(BOTBUFFER, "bet %s %s 100" % (WINNER, LOSER))
 
 # have a ruck
-def fight(my_opponent, FIGHTS):
+def fight(my_opponent):
     weechat.prnt(SCRIPTBUFFER, "%sFighting ..." % weechat.color("red, black"))
     weechat.prnt(SCRIPTBUFFER, "")
-    for _ in range(5 - FIGHTS):
-        weechat.command(BOTBUFFER, "fight %s" % (my_opponent))
+    weechat.command(BOTBUFFER, "fight %s" % (my_opponent))
 
 # upgrade my stuff
 def upgradeitems():
@@ -353,7 +352,7 @@ def fighting(my_player, my_opponent):
                 weechat.prnt(SCRIPTBUFFER, "No suitable opponent...")
                 weechat.prnt(SCRIPTBUFFER, "")
             else:
-                fight(my_opponent, int(my_player["fights"]))
+                fight(my_opponent)
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     global WINNER, LOSER
@@ -375,7 +374,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '5.6.0'
+SCRIPT_VERSION = '5.6.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
