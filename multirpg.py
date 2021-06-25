@@ -436,7 +436,7 @@ PHOOK = weechat.hook_print("", "notify_private,nick_multirpg,nick_Mingbeast", ""
 # setup bar
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
 CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
-                         "0", "5", "default", "white", "blue", "off", "MRPGCOUNTERS")
+                         "0", "5", "default", "white", "blue", "darkgray", "off", "MRPGCOUNTERS")
 
 # Issue command to kick us off with this new bullshit...
 get_rawplayers3("", "")
