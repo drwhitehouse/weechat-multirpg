@@ -17,3 +17,7 @@ Alignment:
 Set either human, priest or undead in the config file.
 Whatever this setting, players under level 10 will align as priests for early game advantage.
 Once level 10 is reached, the alignment setting in the config file will be applied.
+
+Legacy version: 
+
+This is for crusty old weechat.
