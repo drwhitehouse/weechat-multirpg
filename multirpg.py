@@ -174,7 +174,7 @@ def get_rawplayers3(data, timer):
 def rawplayers3_cb(data, command, rc, out, err):
     global raw_players, my_content, parse_count
     if out != "":
-	raw_players += out
+        raw_players += out
         if int(rc) >= 0:
             parse_count += 1
             my_player, all_players = get_stats(raw_players)
@@ -213,7 +213,7 @@ def rawplayers3_cb(data, command, rc, out, err):
                                                                                                                                                     s_time,
                                                                                                                                                     int(day),
                                                                                                                                                     str(int(hour)).zfill(2),
-														                                    str(int(mins)).zfill(2),
+                                                                                                                                                    str(int(mins)).zfill(2),
                                                                                                                                                     parse_count)
             refreshbar()
             raw_players = ""
@@ -274,18 +274,18 @@ def check_finances(my_player):
 def takeaction(my_player):
     time_now = int(time.time())
     if int(my_player['level']) > 9:
-	if time_now > int(my_player['regentm']):
+        if time_now > int(my_player['regentm']):
             my_creep = getcreep(int(my_player["level"]))
             weechat.prnt(SCRIPTBUFFER, "%sAttacking..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "attack %s" % (my_creep))
     if int(my_player['level']) > 34:
-	if time_now > int(my_player['challengetm']):
+        if time_now > int(my_player['challengetm']):
             weechat.prnt(SCRIPTBUFFER, "%sChallenging..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "challenge")
     if int(my_player['level']) > 39:
-	if time_now > int(my_player['slaytm']):
+        if time_now > int(my_player['slaytm']):
             my_monster = getmonster(int(my_player["sum"]))
             weechat.prnt(SCRIPTBUFFER, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
@@ -435,7 +435,7 @@ PHOOK = weechat.hook_print("", "notify_private,nick_multirpg,nick_Mingbeast", ""
 # setup bar
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
 CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window", "${buffer.full_name} == python.weechat-multirpg", "top", "horizontal", "vertical",
-                         "0", "5", "default", "white", "blue", "off", "MRPGCOUNTERS")
+                         "0", "5", "default", "white", "blue", "darkgray", "off", "MRPGCOUNTERS")
 
 # Issue command to kick us off with this new bullshit...
 get_rawplayers3("", "")
