@@ -42,10 +42,6 @@ def multirpg_config_read():
     global MULTIRPG_CONFIG_FILE
     return weechat.config_read(MULTIRPG_CONFIG_FILE)
 
-# call bot for whoami & stats
-def callbot():
-    weechat.command(BOTBUFFER, "rawstats2")
-
 # deposit gold
 def depositgold(deposit):
     weechat.prnt(SCRIPTBUFFER, "Depositing: %s gold..." % (deposit))
@@ -81,7 +77,7 @@ def uphero():
     weechat.command(BOTBUFFER, "hero level")
 
 # get creep for attack
-def getcreep(my_level):
+def get_creep(my_level):
     if my_level > 150:
         my_creep = "ogre"
     elif my_level > 140:
@@ -119,7 +115,7 @@ def getcreep(my_level):
     return my_creep
 
 # get monster for slay
-def getmonster(my_sum):
+def get_monster(my_sum):
     if my_sum > 10000:
         my_monster = "hippogriff"
     elif my_sum > 9000:
@@ -172,18 +168,35 @@ def get_rawplayers3(data, timer):
 
 # rawplayers3 callback
 def rawplayers3_cb(data, command, rc, out, err):
-    global raw_players, my_content, parse_count
+    global raw_players, my_content, cash
     if out != "":
         raw_players += out
         if int(rc) >= 0:
-            parse_count += 1
             my_player, all_players = get_stats(raw_players)
-            check_alignment(my_player)
-            check_finances(my_player)
-            takeaction(my_player)
-            betting(my_player)
-            my_opponent = getopponent(my_player, all_players)
-            fighting(my_player, my_opponent)
+            cash = int(my_player['bank'])
+            if int(my_player['online']) == 1:
+                check_alignment(my_player)
+                check_finances(my_player)
+                go_shopping(my_player)
+                hire_sidekicks(my_player)
+                takeaction(my_player)
+                if int(my_player['level']) > 29 and int(my_player['bets']) < 5:
+                    challenger, opponent, odds = bestbet(all_players)
+                    weechat.prnt(SCRIPTBUFFER, "Best Bet:")
+                    weechat.prnt(SCRIPTBUFFER, "%s vs %s odds: %s" % (challenger, opponent, odds))
+                    weechat.prnt(SCRIPTBUFFER, "")
+                    if int(my_player['bets']) < 5:
+                        betting(challenger, opponent)
+                if int(my_player['level']) > 9 and int(my_player['fights']) < 5:
+                    my_opponent, odds = get_opponent(my_player, all_players)
+                    weechat.prnt(SCRIPTBUFFER, "Best Fight:")
+                    weechat.prnt(SCRIPTBUFFER, "Opponent: %s Odds: %s" % (str(my_opponent), str(odds)))
+                    weechat.prnt(SCRIPTBUFFER, "")
+                    if odds > 1:
+                        fighting(my_player, my_opponent)
+            else:
+                weechat.prnt(SCRIPTBUFFER, "%s WARNING: offline" % weechat.color("red, black"))
+                weechat.prnt(SCRIPTBUFFER, "")
             time_now = int(time.time())
             if int(my_player['level']) > 9:
                 a_time = time.strftime("%H:%M", time.gmtime(int(my_player['regentm']) - time_now))
@@ -203,18 +216,18 @@ def rawplayers3_cb(data, command, rc, out, err):
             hour = ttltime // 3600
             ttltime %= 3600
             mins = ttltime // 60
-            my_content = "rank: %s, level: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, ttl: %s days, %s:%s, count: %s" % (my_player['rank'],
-                                                                                                                                                    my_player['level'],
-                                                                                                                                                    my_player['sum'],
-                                                                                                                                                    my_player['gold'],
-                                                                                                                                                    my_player['bank'],
-                                                                                                                                                    a_time,
-                                                                                                                                                    c_time,
-                                                                                                                                                    s_time,
-                                                                                                                                                    int(day),
-                                                                                                                                                    str(int(hour)).zfill(2),
-                                                                                                                                                    str(int(mins)).zfill(2),
-                                                                                                                                                    parse_count)
+            my_content = "rank: %s, level: %s, sum: %s, gold: %s, bank: %s, attack: %s, challenge: %s, slay: %s, ttl: %s days, %s:%s" % (my_player['rank'],
+                                                                                                                                         my_player['level'],
+                                                                                                                                         my_player['sum'],
+                                                                                                                                         my_player['gold'],
+                                                                                                                                         my_player['bank'],
+                                                                                                                                         a_time,
+                                                                                                                                         c_time,
+                                                                                                                                         s_time,
+                                                                                                                                         int(day),
+                                                                                                                                         str(int(hour)).zfill(2),
+                                                                                                                                         str(int(mins)).zfill(2),
+)
             refreshbar()
             raw_players = ""
     return weechat.WEECHAT_RC_OK
@@ -243,7 +256,7 @@ def check_alignment(my_player):
     else:
         MYALIGNMENT = "human"
         my_alignment = "n"
-    if int(my_player['level']) < 10:
+    if int(my_player['level']) < 40:
         if my_player['align'] != "g":
             weechat.command(BOTBUFFER, "align priest")
     else:
@@ -256,26 +269,75 @@ def check_finances(my_player):
     gold = int(my_player['gold'])
     if gold > 40:
         depositgold(gold - 40)
-    elif int(my_player['level']) > 14:
+
+# shopping
+def go_shopping(my_player):
+    global cash
+    buy_lvl = 15
+    itm_cost = int(my_player['level']) * 6
+    itm_lvl = int(my_player['level']) * 2
+    itm_diff = 19
+    my_gear = {}
+    keylist = []
+    if int(my_player['level']) > buy_lvl:
+        amulet = int(re.sub("[^0-9]", "", my_player['amulet']))
+        my_gear[amulet] = "amulet"
+        boots = int(re.sub("[^0-9]", "", my_player['boots']))
+        my_gear[boots] = "boots"
+        charm = int(re.sub("[^0-9]", "", my_player['charm']))
+        my_gear[charm] = "charm"
+        gloves = int(re.sub("[^0-9]", "", my_player['gloves']))
+        my_gear[gloves] = "gloves"
+        helm = int(re.sub("[^0-9]", "", my_player['helm']))
+        my_gear[helm] = "helm"
+        leggings = int(re.sub("[^0-9]", "", my_player['leggings']))
+        my_gear[leggings] = "leggings"
+        ring = int(re.sub("[^0-9]", "", my_player['ring']))
+        my_gear[ring] = "ring"
+        shield = int(re.sub("[^0-9]", "", my_player['shield']))
+        my_gear[shield] = "shield"
+        tunic = int(re.sub("[^0-9]", "", my_player['tunic']))
+        my_gear[tunic] = "tunic"
+        weapon = int(re.sub("[^0-9]", "", my_player['weapon']))
+        my_gear[weapon] = "weapon"
+        for item in my_gear:
+            if item < ( itm_lvl - itm_diff):
+                if cash > itm_cost:
+                    weechat.prnt(SCRIPTBUFFER, "%sBuying new %s..." % (weechat.color("red, black"), my_gear[item]))
+                    weechat.prnt(SCRIPTBUFFER, "")
+                    weechat.command(BOTBUFFER, "bank withdraw %s" % itm_cost)
+                    weechat.command(BOTBUFFER, "buy %s %s" % (my_gear[item], itm_lvl))
+                    cash = cash - itm_cost
+
+# sidekicks
+def hire_sidekicks(my_player):
+    global cash
+    eng_hire_lvl = 24
+    if int(my_player['level']) > eng_hire_lvl:
         if int(my_player['englevel']) < 9:
-            if int(my_player['engineer']) == 0 and bank > 1000:
+            if int(my_player['engineer']) == 0 and cash > 2000:
                 hireengineer()
-            if int(my_player['engineer']) == 1 and bank > 200:
+                cash = cash - 2000
+            if int(my_player['engineer']) == 1 and cash > 200:
                 upengineer()
-        elif int(my_player['hlevel']) < 9:
-            if int(my_player['hero']) == 0 and bank > 1000:
+                cash = cash - 200
+        elif int(my_player['hlevel']) < 9 and int(my_player['sum']) > 1200:
+            if int(my_player['hero']) == 0 and cash > 1000:
                 summonhero()
-            if int(my_player['hero']) == 1 and bank > 200:
+                cash = cash - 1000
+            if int(my_player['hero']) == 1 and cash > 200:
                 uphero()
-        elif bank >= 2000:
+                cash = cash - 200
+        elif cash >= 2000  and int(my_player['hlevel']) == 9:
             upgradeitems()
+            cash = cash - 2000
 
 # take action (attack / challenge / slay)
 def takeaction(my_player):
     time_now = int(time.time())
     if int(my_player['level']) > 9:
         if time_now > int(my_player['regentm']):
-            my_creep = getcreep(int(my_player["level"]))
+            my_creep = get_creep(int(my_player["level"]))
             weechat.prnt(SCRIPTBUFFER, "%sAttacking..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "attack %s" % (my_creep))
@@ -286,64 +348,74 @@ def takeaction(my_player):
             weechat.command(BOTBUFFER, "challenge")
     if int(my_player['level']) > 39:
         if time_now > int(my_player['slaytm']):
-            my_monster = getmonster(int(my_player["sum"]))
+            my_monster = get_monster(int(my_player["sum"]))
             weechat.prnt(SCRIPTBUFFER, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
             weechat.command(BOTBUFFER, "slay %s" % (my_monster))
 
-def betting(my_player):
-    if int(my_player["bank"]) > 100:
-        if int(my_player["bets"]) < 5 and int(my_player["level"]) > 29:
-            if WINNER == "" and LOSER == "":
-                weechat.command(MINGBUFFER, "!bestbet")
-            else:
-                weechat.command(MINGBUFFER, "!bestbet")
-                gamble(WINNER, LOSER)
+def bestbet(all_players):
+    all_bets = {}
+    for player in all_players:
+        challenger = all_players[player]
+        if int(challenger['level']) > 29 and int(challenger['online']) == 1:
+            opponent, odds = get_opponent(challenger, all_players)
+            this_bet = { "challenger": challenger['char'], "opponent": opponent, "odds": odds}
+            all_bets[player] = this_bet
+    sorted_keys = sorted(all_bets.keys(), key=lambda y: (all_bets[y]['odds']), reverse=True)
+    best_bet = all_bets[sorted_keys[0]]
+    return best_bet['challenger'], best_bet['opponent'], best_bet['odds']
 
-def getopponent(my_player, all_players):
+def betting(WINNER, LOSER):
+    global cash
+    if cash < 100:
+        weechat.prnt(SCRIPTBUFFER, "Not enough cash.")
+    else:
+        gamble(WINNER, LOSER)
+        cash = cash - 100
+
+def get_real_sum(player):
+    bonus = int(0.1 * int(player['sum']))
+    if player['hero'] == 1:
+        hbonus = ((int(player['hlevel']) + 2) / 100)
+    else:
+        hbonus = 0
+    if player['align'] == "g":
+        effective_sum = int(player['sum']) + bonus
+    elif player['align'] == "e":
+        effective_sum = int(player['sum']) - bonus
+    else:
+        effective_sum = int(player['sum'])
+    effective_sum += hbonus
+    return effective_sum
+
+def get_opponent(my_player, all_players):
     candidates = {}
-    final_selection = {}
     keylist = []
+    my_effective_sum = get_real_sum(my_player)
+    no_opponent = "no opponent"
 
     # Get all players my level or above who aren't me or on my team and key by rank.
 
     for player in all_players:
         this_player = all_players[player]
+        t_p_effective_sum = get_real_sum(this_player)
         if int(this_player['online']) == 1:
             if int(this_player['level']) >= int(my_player['level']):
-                if this_player['char'] != MYNICK and this_player['team'] != my_player['team']:
-                    candidates[this_player['rank']] = this_player
-
-    # Go through the candidates calculating and keying by effective sum.
-
-    for candidate in candidates:
-        this_candidate = candidates[candidate]
-        bonus = int(0.1 * int(this_candidate['sum']))
-        if this_candidate['align'] == "g":
-            effective_sum = int(this_candidate['sum']) + bonus
-        elif this_candidate['align'] == "e":
-            effective_sum = int(this_candidate['sum']) - bonus
-        else:
-            effective_sum = int(this_candidate['sum'])
-        final_selection[str(effective_sum)] = this_candidate
+                if this_player['char'] != my_player['char'] and this_player['team'] != my_player['team']:
+                    candidates[t_p_effective_sum] = this_player
 
     # Go through that getting a list of the keys.
 
-    for finalist in final_selection:
-        keylist.append(int(finalist))
-        keylist.sort()
-    my_dude = final_selection[str(keylist[0])]
-    my_opponent = my_dude['char']
-    mybonus = int(0.1 * int(my_player['sum']))
-    if my_player['align'] == "g":
-        my_effective_sum = int(my_player['sum']) + mybonus
-    elif my_player['align'] == "e":
-        my_effective_sum = int(my_player['sum']) - mybonus
+    if candidates != {}:
+        for efsum in candidates:
+            keylist.append(efsum)
+            keylist.sort()
+        my_dude = candidates[keylist[0]]
+        my_opponent = my_dude['char']
+        odds = float(my_effective_sum) / keylist[0]
+        return my_opponent, odds
     else:
-        my_effective_sum = int(my_player['sum'])
-    if my_effective_sum < int(keylist[0]):
-        my_opponent = ""
-    return my_opponent
+        return no_opponent, 0
 
 def fighting(my_player, my_opponent):
     if int(my_player['level']) > 9 and int(my_player['level']) < 200:
@@ -355,13 +427,6 @@ def fighting(my_player, my_opponent):
                 fight(my_opponent)
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
-    global WINNER, LOSER
-
-    # Get gambling odds
-    if msg.startswith("bestbet"):
-        chunks = msg.split(" ")
-        WINNER = chunks[1]
-        LOSER = chunks[2]
 
     # display lines about me
     if MYNICK in msg:
@@ -373,18 +438,16 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 
 # initialise variables
 SCRIPT_NAME = 'multirpg'
-SCRIPT_AUTHOR = 'drwhitehouse'
-SCRIPT_VERSION = '8.0.0'
+SCRIPT_AUTHOR = 'drwhitehouse and contributors'
+SCRIPT_VERSION = '8.2.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
 MULTIRPG_CONFIG_FILE = ""
 MULTIRPG_CONFIG_OPTION = {}
 raw_players = ""
-WINNER = ""
-LOSER = ""
 my_content = ""
-parse_count = 0
+cash = 0
 
 # register the script
 weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", "")
@@ -425,12 +488,8 @@ CHANBUFFER = weechat.info_get("irc_buffer", "%s, #multirpg" %(IRCSERVER))
 weechat.command(CHANBUFFER, "/query multirpg")
 BOTBUFFER = weechat.current_buffer()
 
-# query other bot
-weechat.command(CHANBUFFER, "/query Mingbeast")
-MINGBUFFER = weechat.current_buffer()
-
 # initialise hooks
-PHOOK = weechat.hook_print("", "notify_private,nick_multirpg,nick_Mingbeast", "", 0, "msgparser", "")
+PHOOK = weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser", "")
 
 # setup bar
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
