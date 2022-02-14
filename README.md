@@ -12,12 +12,7 @@ Useage:
 7. ...
 8. Profit?
 
-Alignment:
+Alignment is a thing in this game. You might be able to set a default one in the config file if the script isnt loaded.
+(I don't understand how weechat config files work)
 
-Set either human, priest or undead in the config file.
-Whatever this setting, players under level 10 will align as priests for early game advantage.
-Once level 10 is reached, the alignment setting in the config file will be applied.
-
-Tested on:
-
-Debian: Weechat version 3.0, 2.3, 0.4.3
+Barely tested.
