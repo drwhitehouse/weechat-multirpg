@@ -1,7 +1,7 @@
 # weechat-multirpg
 Multirpg Script For Weechat
 
-Useage:
+Usage:
 
 1. Fire up weechat
 2. Connect to your server and log in to multirpg
