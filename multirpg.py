@@ -257,9 +257,9 @@ def get_stats(RAW_PLAYERS):
     all_players = {}
     myrawplayers = re.sub(r'\{[^{}]*\}', lambda x: x.group(0).replace(' ','_'), RAW_PLAYERS)
     for player in myrawplayers.splitlines():
-        #playerstats = dict([(x, y) for x, y in zip(player.split()[::2], player.split()[1::2])])
         playerstats = dict(zip(player.split()[::2], player.split()[1::2]))
-        all_players[playerstats['rank']] = playerstats
+        if int(playerstats['online']) == 1:
+            all_players[playerstats['rank']] = playerstats
     for player in all_players:
         this_player = all_players[player]
         if this_player['char'] == MYNICK:
@@ -379,7 +379,7 @@ def bestbet(all_players):
     all_bets = {}
     for player in all_players:
         challenger = all_players[player]
-        if int(challenger['level']) > 29 and int(challenger['online']) == 1:
+        if int(challenger['level']) > 29:
             opponent, odds = get_opponent(challenger, all_players, bet=True)
             this_bet = { "challenger": challenger['char'], "opponent": opponent, "odds": odds}
             all_bets[player] = this_bet
@@ -425,8 +425,7 @@ def get_opponent(my_player, all_players, bet=False):
             t_p_effective_sum = int(this_player['sum'])
         else:
             t_p_effective_sum = get_real_sum(this_player)
-        if int(this_player['online']) == 1 and \
-                int(this_player['level']) >= int(my_player['level']):
+        if int(this_player['level']) >= int(my_player['level']):
             if this_player['char'] != my_player['char'] and \
                     this_player['team'] != my_player['team']:
                 candidates[t_p_effective_sum] = this_player
@@ -461,7 +460,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.2.3'
+SCRIPT_VERSION = '8.3.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -499,7 +498,7 @@ monsters = {
         8000: "vampire",
         7000: "mammoth",
         6000: "centaur",
-        5000: "medusa",
+        1000: "medusa",
 }
 
 # register the script
