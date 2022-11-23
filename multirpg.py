@@ -24,7 +24,6 @@ def unload_script_cb():
 
 def multirpg_config_init():
     """ initialise configuration """
-    global MULTIRPG_CONFIG_FILE, MULTIRPG_CONFIG_OPTION
     MULTIRPG_CONFIG_FILE = weechat.config_new(CONFIG_FILE_NAME, "", "")
     if MULTIRPG_CONFIG_FILE == "":
         return
@@ -56,11 +55,8 @@ def multirpg_config_init():
                                                                     "multirpg IRCSERVER",
                                                                     "", 0, 0, "", "", 0,
                                                                     "", "", "", "", "", "")
-
-def multirpg_config_read():
-    """ read config file """
-    global MULTIRPG_CONFIG_FILE
-    return weechat.config_read(MULTIRPG_CONFIG_FILE)
+    weechat.config_read(MULTIRPG_CONFIG_FILE)
+    return
 
 def depositgold(deposit):
     """ deposit gold """
@@ -180,7 +176,7 @@ def refreshbar():
 
 def show_mrpgcounters(data, item, window):
     """ show counters for mrpgbar """
-    return MY_CONTENT
+    return "".join(MY_CONTENT)
 
 def get_rawplayers3(data, timer):
     """ get rawplayers3 from url """
@@ -189,11 +185,10 @@ def get_rawplayers3(data, timer):
 
 def rawplayers3_cb(data, command, rtncd, out, err):
     """ rawplayers3 callback """
-    global RAW_PLAYERS, MY_CONTENT
     if out != "":
-        RAW_PLAYERS += out
+        RAW_PLAYERS.append(out)
         if int(rtncd) >= 0:
-            my_player, all_players = get_stats(RAW_PLAYERS)
+            my_player, all_players = get_stats("".join(RAW_PLAYERS))
             if int(my_player['online']) == 1:
                 check_alignment(my_player)
                 cash = check_finances(my_player)
@@ -226,7 +221,8 @@ def rawplayers3_cb(data, command, rtncd, out, err):
             hour = ttltime // 3600
             ttltime %= 3600
             mins = ttltime // 60
-            MY_CONTENT = ("rank: %s, "
+            del MY_CONTENT[:]
+            MY_CONTENT.append("rank: %s, "
                           "level: %s, "
                           "sum: %s, "
                           "gold: %s, "
@@ -248,7 +244,7 @@ def rawplayers3_cb(data, command, rtncd, out, err):
                                                    )
                           )
             refreshbar()
-            RAW_PLAYERS = ""
+            del RAW_PLAYERS[:]
     return weechat.WEECHAT_RC_OK
 
 def get_stats(RAW_PLAYERS):
@@ -460,14 +456,13 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.3.0'
+SCRIPT_VERSION = '8.3.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
-MULTIRPG_CONFIG_FILE = ""
 MULTIRPG_CONFIG_OPTION = {}
-RAW_PLAYERS = ""
-MY_CONTENT = ""
+RAW_PLAYERS = []
+MY_CONTENT = []
 THREE = 50331648
 ODDS = 0.9
 
@@ -506,7 +501,6 @@ weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCR
 
 # read configuration
 multirpg_config_init()
-multirpg_config_read()
 MYNICK = weechat.config_string(MULTIRPG_CONFIG_OPTION['MYNICK'])
 MYALIGNMENT = weechat.config_string(MULTIRPG_CONFIG_OPTION['MYALIGNMENT'])
 IRCSERVER = weechat.config_string(MULTIRPG_CONFIG_OPTION['IRCSERVER'])
