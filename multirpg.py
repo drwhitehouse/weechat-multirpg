@@ -123,8 +123,12 @@ def gamble(winner, loser):
     weechat.command(BOTBUFFER, "bank withdraw 100")
     weechat.command(BOTBUFFER, "bet %s %s 100" % (winner, loser))
 
-def fight(my_opponent):
+def fight(my_player, my_opponent):
     """ have a ruck """
+    if int(my_player['level']) > 89:
+        weechat.prnt(SCRIPTBUFFER, "%sAttempting to load potion..." % weechat.color("red, black"))
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, "load power 1")
     weechat.prnt(SCRIPTBUFFER, "%sFighting ..." % weechat.color("red, black"))
     weechat.prnt(SCRIPTBUFFER, "")
     weechat.command(BOTBUFFER, "align priest")
@@ -132,14 +136,23 @@ def fight(my_opponent):
 
 def upgradeitems(my_player, cash):
     """ upgrade my stuff """
-    if cash > 200 and int(my_player['hlevel']) == 9:
-        if int(my_player['bets']) == 5:
-            lvl = int(cash / 200)
-            withdraw = lvl * 200
-            weechat.prnt(SCRIPTBUFFER, "%sUpgrading items ..." % weechat.color("red, black"))
-            weechat.prnt(SCRIPTBUFFER, "")
-            weechat.command(BOTBUFFER, "bank withdraw %s" % (withdraw))
-            weechat.command(BOTBUFFER, "upgrade all %s" % (lvl))
+    if int(my_player['hlevel']) < 9:
+        return cash
+    if int(my_player['bets']) < 5:
+        return cash
+    if int(my_player['level']) > 89 and cash > 600:
+        weechat.prnt(SCRIPTBUFFER, "%sBuying potion ..." % weechat.color("red, black"))
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, "bank withdraw 400")
+        weechat.command(BOTBUFFER, "buy power")
+        cash = cash - 400
+    if cash > 200:
+        lvl = int(cash / 200)
+        withdraw = lvl * 200
+        weechat.prnt(SCRIPTBUFFER, "%sUpgrading items ..." % weechat.color("red, black"))
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, "bank withdraw %s" % (withdraw))
+        weechat.command(BOTBUFFER, "upgrade all %s" % (lvl))
     return cash
 
 def check_bet(all_players, my_player, cash):
@@ -441,7 +454,7 @@ def get_opponent(my_player, all_players, bet=False):
 def fighting(my_player, my_opponent):
     """ fighting """
     if int(my_player['fights']) < 5:
-        fight(my_opponent)
+        fight(my_player, my_opponent)
 
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     """ parse messages """
@@ -456,7 +469,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.3.1'
+SCRIPT_VERSION = '8.3.2'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
