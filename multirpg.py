@@ -191,6 +191,18 @@ def show_mrpgcounters(data, item, window):
     """ show counters for mrpgbar """
     return "".join(MY_CONTENT)
 
+def display_activity(data, timer):
+    """ flash the hat """
+    weechat.hook_process("url:http://10.15.0.11:5000/flash",60 * 1000, "display_cb", "")
+    return weechat.WEECHAT_RC_OK
+
+def display_cb(data, command, rtncd, out, err):
+    """ display callback """
+    if out != "":
+        weechat.prnt(SCRIPTBUFFER, "%sDisplay..." % weechat.color("red, black"))
+        weechat.prnt(SCRIPTBUFFER, "")
+    return weechat.WEECHAT_RC_OK
+
 def get_rawplayers3(data, timer):
     """ get rawplayers3 from url """
     weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
@@ -462,6 +474,8 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     if MYNICK in msg:
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
+        if ZEROWDISPLAY:
+            display_activity("","")
 
     # return
     return weechat.WEECHAT_RC_OK
@@ -469,15 +483,16 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.3.2'
+SCRIPT_VERSION = '8.5.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
 MULTIRPG_CONFIG_OPTION = {}
 RAW_PLAYERS = []
 MY_CONTENT = []
-THREE = 50331648
+CLIENTVER = 50331648
 ODDS = 0.9
+ZEROWDISPLAY = False
 
 creeps = {
         10: "bush",
@@ -553,7 +568,7 @@ PHOOK = weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser
 # setup bar
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
 version = int(weechat.info_get("version_number", "") or 0)
-if version < THREE:
+if version < CLIENTVER:
     CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window",
                              "${buffer.full_name} == python.weechat-multirpg",
                              "top", "horizontal", "vertical","0", "5", "default",
