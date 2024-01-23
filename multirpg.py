@@ -89,10 +89,7 @@ def uphero():
 
 def get_creep(my_level):
     """ get creep for attack """
-    if PYMAJOR == 2:
-        these_creeps = collections.OrderedDict(sorted(creeps.items()))
-    else:
-        these_creeps = creeps
+    these_creeps = creeps
     for key in these_creeps:
         if my_level <= key:
             my_creep = these_creeps.get(key)
@@ -101,14 +98,10 @@ def get_creep(my_level):
 
 def get_monster(my_sum):
     """ get monster for attack """
-    if PYMAJOR == 2:
-        these_monsters = collections.OrderedDict(sorted(monsters.items(), reverse=True))
-    else:
-        these_monsters = monsters
+    these_monsters = monsters
     for key in these_monsters:
         if my_sum >= key:
             my_monster = these_monsters.get(key)
-            break
     return my_monster
 
 def gamble(winner, loser):
@@ -342,6 +335,9 @@ def go_shopping(my_player, cash):
         for item in my_gear:
             if item < ( itm_lvl - itm_diff):
                 if cash > itm_cost:
+                    # Debug
+                    weechat.prnt(SCRIPTBUFFER, "item: %s itm_lvl: %s itm_cost: %s" % (item, itm_lvl, itm_cost))
+                    # end Debug
                     weechat.prnt(SCRIPTBUFFER, "%sBuying new %s from the shop..." % (weechat.color("cyan, black"), my_gear[item]))
                     weechat.prnt(SCRIPTBUFFER, "")
                     weechat.command(BOTBUFFER, "bank withdraw %s" % itm_cost)
@@ -489,16 +485,19 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.5.1'
+SCRIPT_VERSION = '8.5.2'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
 MULTIRPG_CONFIG_OPTION = {}
 RAW_PLAYERS = []
 MY_CONTENT = []
-CLIENTVER = 50331648
 ODDS = 0.9
 ZEROWDISPLAY = False
+
+# The creeps and monsters lists show the level at which the script picks different opponents.
+# It's not clear what the optimal level to challenge at is, but looking at players who are
+# definitely not cheating, but frequently successful, it may be worth skipping some of them.
 
 creeps = {
         10: "bush",
@@ -521,13 +520,13 @@ creeps = {
 }
 
 monsters = {
-        11000: "hippogriff",
-        10000: "sphinx",
-        9000: "dragon",
-        8000: "vampire",
-        7000: "mammoth",
-        6000: "centaur",
         1000: "medusa",
+        3000: "centaur",
+        4000: "mammoth",
+#           : "vampire",
+#           : "dragon",
+#           : "sphinx",
+        4750: "hippogriff",
 }
 
 # register the script
@@ -572,17 +571,10 @@ PHOOK = weechat.hook_print("", "notify_private,nick_multirpg", "", 0, "msgparser
 
 # setup bar
 MRPGCOUNTERS = weechat.bar_item_new("MRPGCOUNTERS", "show_mrpgcounters", "")
-version = int(weechat.info_get("version_number", "") or 0)
-if version < CLIENTVER:
-    CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window",
-                             "${buffer.full_name} == python.weechat-multirpg",
-                             "top", "horizontal", "vertical","0", "5", "default",
-                             "white", "blue", "off", "MRPGCOUNTERS")
-else:
-    CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window",
-                             "${buffer.full_name} == python.weechat-multirpg",
-                             "top", "horizontal", "vertical","0", "5", "default",
-                             "white", "blue", "darkgray", "off", "MRPGCOUNTERS")
+CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window",
+                         "${buffer.full_name} == python.weechat-multirpg",
+                         "top", "horizontal", "vertical","0", "5", "default",
+                         "white", "blue", "darkgray", "off", "MRPGCOUNTERS")
 
 # Issue command to kick us off with this new bullshit...
 get_rawplayers3("", "")
