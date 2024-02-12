@@ -207,7 +207,6 @@ def rawplayers3_cb(data, command, rtncd, out, err):
         if int(rtncd) >= 0:
             my_player, all_players = get_stats("".join(RAW_PLAYERS))
             if int(my_player['online']) == 1:
-                check_alignment(my_player)
                 cash = check_finances(my_player)
                 cash = go_shopping(my_player, cash)
                 cash = hire_sidekicks(my_player, cash)
@@ -215,6 +214,7 @@ def rawplayers3_cb(data, command, rtncd, out, err):
                 cash = upgradeitems(my_player, cash)
                 takeaction(my_player)
                 check_fight(all_players, my_player)
+                check_alignment(my_player)
             else:
                 weechat.prnt(SCRIPTBUFFER, "%s WARNING: offline" % weechat.color("red, black"))
                 weechat.prnt(SCRIPTBUFFER, "")
@@ -292,9 +292,7 @@ def check_alignment(my_player):
         if int(my_player['level']) > 29:
             if int(my_player['level']) < 100:
                 if my_align != "n":
-                    weechat.prnt(SCRIPTBUFFER, "%sTo err is human..." % weechat.color("cyan, black"))
-                    weechat.prnt(SCRIPTBUFFER, "")
-                    weechat.command(BOTBUFFER, "align human")
+                    only_human()
 
 def check_finances(my_player):
     """ get bank & gold """
@@ -368,10 +366,17 @@ def hire_sidekicks(my_player, cash):
 def take_vows(my_player):
     """ become priest if necessary """
     my_align = my_player['align']
-    if my_align != "g":
+    my_level = my_player['level']
+    if int(my_level) < 100 and my_align != "g":
         weechat.prnt(SCRIPTBUFFER, "%sTaking the vows of a priest..." % weechat.color("cyan, black"))
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "align priest")
+
+def only_human():
+    """ become human """
+    weechat.prnt(SCRIPTBUFFER, "%sTo err is human..." % weechat.color("cyan, black"))
+    weechat.prnt(SCRIPTBUFFER, "")
+    weechat.command(BOTBUFFER, "align human")
 
 def takeaction(my_player):
     """ take action (attack / challenge / slay) """
@@ -438,7 +443,6 @@ def get_opponent(my_player, all_players, bet=False):
     candidates = {}
     keylist = []
     my_effective_sum = int(my_player['sum'])
-    no_opponent = "no opponent"
 
     # Get all players my level or above who aren't me or on my team and key by rank.
 
@@ -463,7 +467,7 @@ def get_opponent(my_player, all_players, bet=False):
         my_opponent = my_dude['char']
         odds = float(my_effective_sum) / keylist[0]
         return my_opponent, odds
-    return no_opponent, 0
+    return "no opponent", 0
 
 def fighting(my_player, my_opponent):
     """ fighting """
