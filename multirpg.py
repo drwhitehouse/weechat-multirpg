@@ -113,8 +113,8 @@ def gamble(winner, loser):
 
 def fight(my_player, my_opponent):
     """ have a ruck """
-    if int(my_player['level']) > 89:
-        weechat.prnt(SCRIPTBUFFER, "%sAttempting to load potion..." % weechat.color("cyan, black"))
+    if int(my_player['level']) > 89 and int(my_player['powerpots']) > 1:
+        weechat.prnt(SCRIPTBUFFER, "%sLoading potion..." % weechat.color("cyan, black"))
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "load power 1")
     weechat.prnt(SCRIPTBUFFER, "%sFighting..." % weechat.color("red, black"))
@@ -124,23 +124,33 @@ def fight(my_player, my_opponent):
 
 def upgradeitems(my_player, cash):
     """ upgrade my stuff """
+    my_pots = int(my_player['powerpots'])
     if int(my_player['hlevel']) < 9:
         return cash
     if int(my_player['bets']) < 5:
         return cash
-    if int(my_player['level']) > 89 and cash > 600:
+    if int(my_player['gold']) > 40:
+        return cash
+    if int(my_player['level']) > 69 and my_pots < 5:
+        budget = 400
+    else:
+        budget = 200
+    if cash < budget:
+        return cash
+    if budget == 400 and int(my_player['level']) < 99:
         weechat.prnt(SCRIPTBUFFER, "%sBuying potion..." % weechat.color("cyan, black"))
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "bank withdraw 400")
         weechat.command(BOTBUFFER, "buy power")
         cash = cash - 400
-    if cash > 200:
+    else:
         lvl = int(cash / 200)
         withdraw = lvl * 200
         weechat.prnt(SCRIPTBUFFER, "%sUpgrading items..." % weechat.color("cyan, black"))
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "bank withdraw %s" % (withdraw))
         weechat.command(BOTBUFFER, "upgrade all %s" % (lvl))
+        cash = cash - withdraw
     return cash
 
 def check_bet(all_players, my_player, cash):
@@ -282,6 +292,7 @@ def get_stats(RAW_PLAYERS):
 def check_alignment(my_player):
     """ check my alignment """
     my_align = my_player['align']
+    my_ttl = int(my_player['ttl'])
     if int(my_player['level']) < 30:
         take_vows(my_player)
     elif int(my_player['level']) > 99 and my_align != "e":
@@ -289,10 +300,11 @@ def check_alignment(my_player):
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "align undead")
     else:
-        if int(my_player['level']) > 29:
-            if int(my_player['level']) < 100:
-                if my_align != "n":
-                    only_human()
+        if my_ttl < 600:
+            take_vows(my_player)
+        else:
+            if my_align != "n":
+                only_human(my_player)
 
 def check_finances(my_player):
     """ get bank & gold """
@@ -372,34 +384,46 @@ def take_vows(my_player):
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "align priest")
 
-def only_human():
+def only_human(my_player):
     """ become human """
-    weechat.prnt(SCRIPTBUFFER, "%sTo err is human..." % weechat.color("cyan, black"))
-    weechat.prnt(SCRIPTBUFFER, "")
-    weechat.command(BOTBUFFER, "align human")
+    my_align = my_player['align']
+    my_level = my_player['level']
+    if int(my_level) < 100 and my_align != "n":
+        weechat.prnt(SCRIPTBUFFER, "%sTo err is human..." % weechat.color("cyan, black"))
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, "align human")
 
 def takeaction(my_player):
     """ take action (attack / challenge / slay) """
+    Att_Now = False
+    Chg_Now = False
+    Sly_Now = False
+    Action = False
     time_now = int(time.time())
-    if int(my_player['level']) > 9:
-        if time_now > int(my_player['regentm']):
+    if int(my_player['level']) > 9 and time_now > int(my_player['regentm']):
+        Att_Now = True
+        Action = True
+    if int(my_player['level']) > 34 and time_now > int(my_player['challengetm']):
+        Chg_Now = True
+        Action = True
+    if int(my_player['level']) > 39 and time_now > int(my_player['slaytm']):
+        Sly_Now = True
+        Action = True
+    if Action:
+        take_vows(my_player)
+        if Att_Now:
             my_creep = get_creep(int(my_player["level"]))
             weechat.prnt(SCRIPTBUFFER, "%sAttacking..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
-            take_vows(my_player)
             weechat.command(BOTBUFFER, "attack %s" % (my_creep))
-    if int(my_player['level']) > 34:
-        if time_now > int(my_player['challengetm']):
+        if Chg_Now:
             weechat.prnt(SCRIPTBUFFER, "%sChallenging..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
-            take_vows(my_player)
             weechat.command(BOTBUFFER, "challenge")
-    if int(my_player['level']) > 39:
-        if time_now > int(my_player['slaytm']):
+        if Sly_Now:
             my_monster = get_monster(int(my_player["sum"]))
             weechat.prnt(SCRIPTBUFFER, "%sSlaying..." % weechat.color("red, black"))
             weechat.prnt(SCRIPTBUFFER, "")
-            take_vows(my_player)
             weechat.command(BOTBUFFER, "slay %s" % (my_monster))
 
 def bestbet(all_players):
@@ -443,9 +467,7 @@ def get_opponent(my_player, all_players, bet=False):
     candidates = {}
     keylist = []
     my_effective_sum = int(my_player['sum'])
-
     # Get all players my level or above who aren't me or on my team and key by rank.
-
     for player in all_players:
         this_player = all_players[player]
         if bet:
@@ -456,9 +478,7 @@ def get_opponent(my_player, all_players, bet=False):
             if this_player['char'] != my_player['char'] and \
                     this_player['team'] != my_player['team']:
                 candidates[t_p_effective_sum] = this_player
-
     # Go through that getting a list of the keys.
-
     if candidates != {}:
         for efsum in candidates:
             keylist.append(efsum)
@@ -477,19 +497,18 @@ def fighting(my_player, my_opponent):
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     """ parse messages """
     # display lines about me
-    if MYNICK in msg:
+    if msg.startswith(MYNICK):
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
         if ZEROWDISPLAY:
             display_activity("","")
-
     # return
     return weechat.WEECHAT_RC_OK
 
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.5.2'
+SCRIPT_VERSION = '8.5.5'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
