@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import collections
+import random
 import weechat
 
 def buffer_input_cb(data, buffer, input_data):
@@ -308,10 +309,27 @@ def check_alignment(my_player):
 
 def check_finances(my_player):
     """ get bank & gold """
+    weechat.prnt(SCRIPTBUFFER, "%sFiddling with loose change..." % weechat.color("yellow, black"))
+    weechat.prnt(SCRIPTBUFFER, "")
     gold = int(my_player['gold'])
+    cash = int(my_player['bank'])
     if gold > 40:
         depositgold(gold - 40)
-    cash = int(my_player['bank'])
+    if gold < 40 and cash > 40 - gold:
+        withdrawl = 40 - gold
+        weechat.prnt(SCRIPTBUFFER, "%sWithdrawing: %s%s gold..." % (weechat.color("yellow, black"),
+                                                                    weechat.color("white, black"),
+                                                                    withdrawl))
+        weechat.command(BOTBUFFER, "bank withdraw %s" % (withdrawl))
+        weechat.prnt(SCRIPTBUFFER, "")
+        cash = cash - withdrawl
+    if random.randint(0, 1):
+        if random.randint(0, 1):
+            weechat.command(BOTBUFFER, "bank withdraw 1")
+            cash = cash - 1
+        else:
+            weechat.command(BOTBUFFER, "bank deposit 1")
+            cash = cash + 1
     return cash
 
 def go_shopping(my_player, cash):
@@ -345,9 +363,6 @@ def go_shopping(my_player, cash):
         for item in my_gear:
             if item < ( itm_lvl - itm_diff):
                 if cash > itm_cost:
-                    # Debug
-                    weechat.prnt(SCRIPTBUFFER, "item: %s itm_lvl: %s itm_cost: %s" % (item, itm_lvl, itm_cost))
-                    # end Debug
                     weechat.prnt(SCRIPTBUFFER, "%sBuying new %s from the shop..." % (weechat.color("cyan, black"), my_gear[item]))
                     weechat.prnt(SCRIPTBUFFER, "")
                     weechat.command(BOTBUFFER, "bank withdraw %s" % itm_cost)
@@ -508,7 +523,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.5.5'
+SCRIPT_VERSION = '8.5.7'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -528,7 +543,7 @@ creeps = {
         20: "spider",
         30: "goblin",
         40: "lich",
-        50: "skeleton",
+#       50: "skeleton",
 #       60: "ghost",
         70: "shadow",
 #       80: "troll",
