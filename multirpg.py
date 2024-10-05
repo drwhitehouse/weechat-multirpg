@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import collections
+import random
 import weechat
 
 def buffer_input_cb(data, buffer, input_data):
@@ -176,6 +177,8 @@ def check_fight(all_players, my_player):
                                                                      str(my_opponent),
                                                                      str(odds)))
         weechat.prnt(SCRIPTBUFFER, "")
+        if int(my_player['gold']) + int(my_player['bank']) > 239:
+            return
         if int(my_player['rank']) > 1:
             if int(my_player['level']) < 30:
                 if odds > ODDS:
@@ -192,11 +195,6 @@ def refreshbar():
 def show_mrpgcounters(data, item, window):
     """ show counters for mrpgbar """
     return "".join(MY_CONTENT)
-
-def display_activity(data, timer):
-    """ flash the hat """
-    weechat.hook_process("url:http://10.15.0.11:5000/flash",60 * 1000, "display_cb", "")
-    return weechat.WEECHAT_RC_OK
 
 def display_cb(data, command, rtncd, out, err):
     """ display callback """
@@ -308,10 +306,27 @@ def check_alignment(my_player):
 
 def check_finances(my_player):
     """ get bank & gold """
+    weechat.prnt(SCRIPTBUFFER, "%sFiddling with loose change..." % weechat.color("yellow, black"))
+    weechat.prnt(SCRIPTBUFFER, "")
     gold = int(my_player['gold'])
+    cash = int(my_player['bank'])
     if gold > 40:
         depositgold(gold - 40)
-    cash = int(my_player['bank'])
+    if gold < 40 and cash > 40 - gold:
+        withdrawl = 40 - gold
+        weechat.prnt(SCRIPTBUFFER, "%sWithdrawing: %s%s gold..." % (weechat.color("yellow, black"),
+                                                                    weechat.color("white, black"),
+                                                                    withdrawl))
+        weechat.command(BOTBUFFER, "bank withdraw %s" % (withdrawl))
+        weechat.prnt(SCRIPTBUFFER, "")
+        cash = cash - withdrawl
+    if random.randint(0, 1):
+        if random.randint(0, 1):
+            weechat.command(BOTBUFFER, "bank withdraw 1")
+            cash = cash - 1
+        else:
+            weechat.command(BOTBUFFER, "bank deposit 1")
+            cash = cash + 1
     return cash
 
 def go_shopping(my_player, cash):
@@ -345,9 +360,6 @@ def go_shopping(my_player, cash):
         for item in my_gear:
             if item < ( itm_lvl - itm_diff):
                 if cash > itm_cost:
-                    # Debug
-                    weechat.prnt(SCRIPTBUFFER, "item: %s itm_lvl: %s itm_cost: %s" % (item, itm_lvl, itm_cost))
-                    # end Debug
                     weechat.prnt(SCRIPTBUFFER, "%sBuying new %s from the shop..." % (weechat.color("cyan, black"), my_gear[item]))
                     weechat.prnt(SCRIPTBUFFER, "")
                     weechat.command(BOTBUFFER, "bank withdraw %s" % itm_cost)
@@ -500,15 +512,13 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     if msg.startswith(MYNICK):
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
-        if ZEROWDISPLAY:
-            display_activity("","")
     # return
     return weechat.WEECHAT_RC_OK
 
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.5.5'
+SCRIPT_VERSION = '8.5.8'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -516,7 +526,6 @@ MULTIRPG_CONFIG_OPTION = {}
 RAW_PLAYERS = []
 MY_CONTENT = []
 ODDS = 0.9
-ZEROWDISPLAY = False
 
 # The creeps and monsters lists show the level at which the script picks different opponents.
 # It's not clear what the optimal level to challenge at is, but looking at players who are
@@ -528,7 +537,7 @@ creeps = {
         20: "spider",
         30: "goblin",
         40: "lich",
-        50: "skeleton",
+#       50: "skeleton",
 #       60: "ghost",
         70: "shadow",
 #       80: "troll",
