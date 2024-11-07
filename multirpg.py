@@ -130,7 +130,7 @@ def upgradeitems(my_player, cash):
         return cash
     if int(my_player['bets']) < 5:
         return cash
-    if int(my_player['gold']) > 40:
+    if int(my_player['gold']) > 41:
         return cash
     if int(my_player['level']) > 69 and my_pots < 5:
         budget = 400
@@ -151,6 +151,29 @@ def upgradeitems(my_player, cash):
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "bank withdraw %s" % (withdraw))
         weechat.command(BOTBUFFER, "upgrade all %s" % (lvl))
+        cash = cash - withdraw
+    return cash
+
+def upgradeitem(my_player, cash):
+    """ upgrade my stuff """
+    if int(my_player['level']) < 40:
+        return cash
+    if int(my_player['bets']) < 5:
+        return cash
+    if int(my_player['gold']) > 41:
+        return cash
+    else:
+        budget = 20
+    if cash < budget:
+        return cash
+    else:
+        upgrades = int(cash / 20)
+        item = str(random.choice(equipment))
+        withdraw = int(upgrades * 20)
+        weechat.prnt(SCRIPTBUFFER, "%sUpgrading %s..." % (weechat.color("cyan, black"), item))
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, "bank withdraw %s" % (withdraw))
+        weechat.command(BOTBUFFER, "upgrade %s %s" % (item, upgrades))
         cash = cash - withdraw
     return cash
 
@@ -220,6 +243,7 @@ def rawplayers3_cb(data, command, rtncd, out, err):
                 cash = hire_sidekicks(my_player, cash)
                 cash = check_bet(all_players, my_player, cash)
                 cash = upgradeitems(my_player, cash)
+                cash = upgradeitem(my_player, cash)
                 takeaction(my_player)
                 check_fight(all_players, my_player)
                 check_alignment(my_player)
@@ -518,7 +542,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.5.8'
+SCRIPT_VERSION = '8.6.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -560,6 +584,19 @@ monsters = {
 #           : "sphinx",
         4750: "hippogriff",
 }
+
+equipment = [
+        'amulet',
+        'boots',
+        'charm',
+        'gloves',
+        'helm',
+        'leggings',
+        'ring',
+        'shield',
+        'tunic',
+        'weapon'
+]
 
 # register the script
 weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", "")
