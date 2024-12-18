@@ -114,7 +114,7 @@ def gamble(winner, loser):
 
 def fight(my_player, my_opponent):
     """ have a ruck """
-    if int(my_player['level']) > 89 and int(my_player['powerpots']) > 1:
+    if int(my_player['level']) > 89 and int(my_player['powerpots']) > 0:
         weechat.prnt(SCRIPTBUFFER, "%sLoading potion..." % weechat.color("cyan, black"))
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "load power 1")
@@ -139,11 +139,13 @@ def upgradeitems(my_player, cash):
     if cash < budget:
         return cash
     if budget == 400 and int(my_player['level']) < 99:
-        weechat.prnt(SCRIPTBUFFER, "%sBuying potion..." % weechat.color("cyan, black"))
+        pots = int(cash / 400)
+        weechat.prnt(SCRIPTBUFFER, "%sBuying %s potion(s)..." % (weechat.color("cyan, black"), pots))
         weechat.prnt(SCRIPTBUFFER, "")
-        weechat.command(BOTBUFFER, "bank withdraw 400")
-        weechat.command(BOTBUFFER, "buy power")
-        cash = cash - 400
+        for _ in range(pots):
+            weechat.command(BOTBUFFER, "bank withdraw 400")
+            weechat.command(BOTBUFFER, "buy power")
+            cash = cash - 400
     else:
         lvl = int(cash / 200)
         withdraw = lvl * 200
@@ -156,6 +158,9 @@ def upgradeitems(my_player, cash):
 
 def upgradeitem(my_player, cash):
     """ upgrade my stuff """
+    my_pots = int(my_player['powerpots'])
+    if int(my_player['level']) > 69 and my_pots < 5:
+        return cash
     if int(my_player['level']) < 40:
         return cash
     if int(my_player['bets']) < 5:
@@ -322,7 +327,9 @@ def check_alignment(my_player):
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "align undead")
     else:
-        if my_ttl < 600:
+        if my_ttl < 600 or int(my_player['fights']) < 5:
+            take_vows(my_player)
+        elif int(my_player['rank']) < 11 and int(my_player['level']) < 100:
             take_vows(my_player)
         else:
             if my_align != "n":
@@ -344,13 +351,14 @@ def check_finances(my_player):
         weechat.command(BOTBUFFER, "bank withdraw %s" % (withdrawl))
         weechat.prnt(SCRIPTBUFFER, "")
         cash = cash - withdrawl
-    if random.randint(0, 1):
+    if gold > 21 and cash > 1:
         if random.randint(0, 1):
-            weechat.command(BOTBUFFER, "bank withdraw 1")
-            cash = cash - 1
-        else:
-            weechat.command(BOTBUFFER, "bank deposit 1")
-            cash = cash + 1
+            if random.randint(0, 1):
+                weechat.command(BOTBUFFER, "bank withdraw 1")
+                cash = cash - 1
+            else:
+                weechat.command(BOTBUFFER, "bank deposit 1")
+                cash = cash + 1
     return cash
 
 def go_shopping(my_player, cash):
@@ -542,7 +550,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.6.0'
+SCRIPT_VERSION = '8.6.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
