@@ -221,12 +221,6 @@ def refreshbar():
     weechat.bar_item_update("MRPGCOUNTERS")
     return weechat.WEECHAT_RC_OK
 
-def bar_time(my_time, my_time_now):
-    """ get times for the bar """
-    bar_time = my_time - my_time_now
-    bar_time = str(datetime.timedelta(seconds=int(bar_time)))
-    return bar_time
-
 def show_mrpgcounters(data, item, window):
     """ show counters for mrpgbar """
     return "".join(MY_CONTENT)
@@ -242,6 +236,12 @@ def get_rawplayers3(data, timer):
     """ get rawplayers3 from url """
     weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
     return weechat.WEECHAT_RC_OK
+
+def bar_time(my_time, my_time_now):
+    """ get times for the bar """
+    bar_time = my_time - my_time_now
+    bar_time = str(datetime.timedelta(seconds=int(bar_time)))
+    return bar_time
 
 def rawplayers3_cb(data, command, rtncd, out, err):
     """ rawplayers3 callback """
@@ -264,15 +264,18 @@ def rawplayers3_cb(data, command, rtncd, out, err):
                 weechat.prnt(SCRIPTBUFFER, "")
             time_now = int(time.time())
             if int(my_player['level']) > 9:
-                a_time = bar_time(int(my_player['regentm']), time_now)
+                a_time = int(my_player['regentm']) - time_now
+                a_time = str(datetime.timedelta(seconds=int(a_time)))
             else:
                 a_time = 'level 10'
             if int(my_player['level']) > 34:
-                c_time = bar_time(int(my_player['challengetm']), time_now)
+                c_time = int(my_player['challengetm']) - time_now
+                c_time = str(datetime.timedelta(seconds=int(c_time)))
             else:
                 c_time = 'level 35'
             if int(my_player['level']) > 39:
-                s_time = bar_time(int(my_player['slaytm']), time_now)
+                s_time = int(my_player['slaytm']) - time_now
+                s_time = str(datetime.timedelta(seconds=int(s_time)))
             else:
                 s_time = 'level 40'
             ttltime = str(datetime.timedelta(seconds=int(my_player['ttl'])))
