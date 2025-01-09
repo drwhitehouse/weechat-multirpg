@@ -221,14 +221,6 @@ def refreshbar():
     weechat.bar_item_update("MRPGCOUNTERS")
     return weechat.WEECHAT_RC_OK
 
-def bar_time(my_time, my_time_now):
-    """ get times for the bar """
-    bar_time = my_time - my_time_now
-    if float(bar_time) < 0:
-        bar_time = 0
-    bar_time = str(datetime.timedelta(seconds=int(bar_time)))
-    return bar_time
-
 def show_mrpgcounters(data, item, window):
     """ show counters for mrpgbar """
     return "".join(MY_CONTENT)
@@ -245,6 +237,15 @@ def get_rawplayers3(data, timer):
     weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
     return weechat.WEECHAT_RC_OK
 
+<<<<<<< HEAD
+def bar_time(my_time, my_time_now):
+    """ get times for the bar """
+    bar_time = my_time - my_time_now
+    bar_time = str(datetime.timedelta(seconds=int(bar_time)))
+    return bar_time
+
+=======
+>>>>>>> d19d4f4d407abbf983c420f391f1f7b5e1ff2d2a
 def rawplayers3_cb(data, command, rtncd, out, err):
     """ rawplayers3 callback """
     if out != "":
@@ -266,15 +267,31 @@ def rawplayers3_cb(data, command, rtncd, out, err):
                 weechat.prnt(SCRIPTBUFFER, "")
             time_now = int(time.time())
             if int(my_player['level']) > 9:
-                a_time = bar_time(int(my_player['regentm']), time_now)
+<<<<<<< HEAD
+                a_time = int(my_player['regentm']) - time_now
+                a_time = str(datetime.timedelta(seconds=int(a_time)))
             else:
                 a_time = 'level 10'
             if int(my_player['level']) > 34:
-                c_time = bar_time(int(my_player['challengetm']), time_now)
+                c_time = int(my_player['challengetm']) - time_now
+                c_time = str(datetime.timedelta(seconds=int(c_time)))
             else:
                 c_time = 'level 35'
             if int(my_player['level']) > 39:
-                s_time = bar_time(int(my_player['slaytm']), time_now)
+                s_time = int(my_player['slaytm']) - time_now
+                s_time = str(datetime.timedelta(seconds=int(s_time)))
+=======
+                a_time = time.strftime("%H:%M", time.gmtime(int(my_player['regentm']) - time_now))
+            else:
+                a_time = 'level 10'
+            if int(my_player['level']) > 34:
+                c_time = time.strftime("%H:%M",
+                                       time.gmtime(int(my_player['challengetm']) - time_now))
+            else:
+                c_time = 'level 35'
+            if int(my_player['level']) > 39:
+                s_time = time.strftime("%H:%M", time.gmtime(int(my_player['slaytm']) - time_now))
+>>>>>>> d19d4f4d407abbf983c420f391f1f7b5e1ff2d2a
             else:
                 s_time = 'level 40'
             ttltime = str(datetime.timedelta(seconds=int(my_player['ttl'])))
@@ -551,7 +568,11 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
+<<<<<<< HEAD
 SCRIPT_VERSION = '8.7.1'
+=======
+SCRIPT_VERSION = '8.7.0'
+>>>>>>> d19d4f4d407abbf983c420f391f1f7b5e1ff2d2a
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
