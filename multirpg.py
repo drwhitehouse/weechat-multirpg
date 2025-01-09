@@ -37,17 +37,17 @@ def multirpg_config_init():
         weechat.config_free(MULTIRPG_CONFIG_FILE)
         return
 
-    MULTIRPG_CONFIG_OPTION["MYNICK"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE,
+    MULTIRPG_CONFIG_OPTION["nickname"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE,
                                                                  section_multirpg,
-                                                                 "MYNICK", "string",
+                                                                 "nickname", "string",
                                                                  "multirpg nickname",
                                                                  "", 0, 0, "", "", 0,
                                                                  "", "", "", "", "", "")
 
-    MULTIRPG_CONFIG_OPTION["IRCSERVER"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE,
+    MULTIRPG_CONFIG_OPTION["irc_server"] = weechat.config_new_option(MULTIRPG_CONFIG_FILE,
                                                                     section_multirpg,
-                                                                    "IRCSERVER", "string",
-                                                                    "multirpg IRCSERVER",
+                                                                    "irc_server", "string",
+                                                                    "multirpg irc_server",
                                                                     "", 0, 0, "", "", 0,
                                                                     "", "", "", "", "", "")
     weechat.config_read(MULTIRPG_CONFIG_FILE)
@@ -157,12 +157,12 @@ def upgradeitems(my_player, cash):
         cash = cash - withdraw
     return cash
 
-def upgradeitem(my_player, cash):
+def upgradeitem(my_player, cash, lowest):
     """ upgrade my stuff """
     my_pots = int(my_player['powerpots'])
-    if int(my_player['level']) > 69 and my_pots < 5:
+    if int(my_player['level']) < 15:
         return cash
-    if int(my_player['level']) < 40:
+    if int(my_player['level']) > 69 and my_pots < 5:
         return cash
     if int(my_player['bets']) < 5:
         return cash
@@ -174,12 +174,11 @@ def upgradeitem(my_player, cash):
         return cash
     else:
         upgrades = int(cash / 20)
-        item = str(random.choice(equipment))
         withdraw = int(upgrades * 20)
-        weechat.prnt(SCRIPTBUFFER, "%sUpgrading %s..." % (weechat.color("cyan, black"), item))
+        weechat.prnt(SCRIPTBUFFER, "%sUpgrading %s..." % (weechat.color("cyan, black"), lowest))
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.command(BOTBUFFER, "bank withdraw %s" % (withdraw))
-        weechat.command(BOTBUFFER, "upgrade %s %s" % (item, upgrades))
+        weechat.command(BOTBUFFER, "upgrade %s %s" % (lowest, upgrades))
         cash = cash - withdraw
     return cash
 
@@ -242,7 +241,16 @@ def display_cb(data, command, rtncd, out, err):
 
 def get_rawplayers3(data, timer):
     """ get rawplayers3 from url """
-    weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
+    if nickname != "" and irc_server != "":
+        weechat.hook_process("url:http://multirpg.net/rawplayers3.php",60 * 1000, "rawplayers3_cb", "")
+    else:
+        weechat.prnt(SCRIPTBUFFER, "%sPlease set nickname / irc_server and reload script:" % weechat.color("red, black"))
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.prnt(SCRIPTBUFFER, "/set multirpg.multirpg.nickname <nick>")
+        weechat.prnt(SCRIPTBUFFER, "/set multirpg.multirpg.irc_server <ircserver>")
+        weechat.prnt(SCRIPTBUFFER, "/script reload multirpg")
+        weechat.prnt(SCRIPTBUFFER, "/save")
+        weechat.prnt(SCRIPTBUFFER, "")
     return weechat.WEECHAT_RC_OK
 
 def rawplayers3_cb(data, command, rtncd, out, err):
@@ -253,16 +261,16 @@ def rawplayers3_cb(data, command, rtncd, out, err):
             my_player, all_players = get_stats("".join(RAW_PLAYERS))
             if int(my_player['online']) == 1:
                 cash = check_finances(my_player)
-                cash = go_shopping(my_player, cash)
+                cash, lowest = inventory(my_player, cash)
                 cash = hire_sidekicks(my_player, cash)
                 cash = check_bet(all_players, my_player, cash)
                 cash = upgradeitems(my_player, cash)
-                cash = upgradeitem(my_player, cash)
+                cash = upgradeitem(my_player, cash, lowest)
                 takeaction(my_player)
                 check_fight(all_players, my_player)
                 check_alignment(my_player)
             else:
-                weechat.prnt(SCRIPTBUFFER, "%s WARNING: offline" % weechat.color("red, black"))
+                weechat.prnt(SCRIPTBUFFER, "%sWARNING: offline" % weechat.color("red, black"))
                 weechat.prnt(SCRIPTBUFFER, "")
             time_now = int(time.time())
             if int(my_player['level']) > 9:
@@ -309,12 +317,10 @@ def get_stats(RAW_PLAYERS):
     myrawplayers = re.sub(r'\{[^{}]*\}', lambda x: x.group(0).replace(' ','_'), RAW_PLAYERS)
     for player in myrawplayers.splitlines():
         playerstats = dict(zip(player.split()[::2], player.split()[1::2]))
-        if int(playerstats['online']) == 1:
+        if playerstats['char'] == nickname :
+            my_player = playerstats
+        if int(playerstats['online']) == 1 :
             all_players[playerstats['rank']] = playerstats
-    for player in all_players:
-        this_player = all_players[player]
-        if this_player['char'] == MYNICK:
-            my_player = this_player
     return my_player, all_players
 
 def check_alignment(my_player):
@@ -362,52 +368,36 @@ def check_finances(my_player):
                 cash = cash + 1
     return cash
 
-def go_shopping(my_player, cash):
-    """ shopping """
-    buy_lvl = 15
-    itm_cost = int(my_player['level']) * 6
-    itm_lvl = int(my_player['level']) * 2
-    itm_diff = 19
+def inventory(my_player, cash):
     my_gear = {}
-    if int(my_player['level']) > buy_lvl:
-        amulet = int(re.sub("[^0-9]", "", my_player['amulet']))
-        my_gear[amulet] = "amulet"
-        boots = int(re.sub("[^0-9]", "", my_player['boots']))
-        my_gear[boots] = "boots"
-        charm = int(re.sub("[^0-9]", "", my_player['charm']))
-        my_gear[charm] = "charm"
-        gloves = int(re.sub("[^0-9]", "", my_player['gloves']))
-        my_gear[gloves] = "gloves"
-        helm = int(re.sub("[^0-9]", "", my_player['helm']))
-        my_gear[helm] = "helm"
-        leggings = int(re.sub("[^0-9]", "", my_player['leggings']))
-        my_gear[leggings] = "leggings"
-        ring = int(re.sub("[^0-9]", "", my_player['ring']))
-        my_gear[ring] = "ring"
-        shield = int(re.sub("[^0-9]", "", my_player['shield']))
-        my_gear[shield] = "shield"
-        tunic = int(re.sub("[^0-9]", "", my_player['tunic']))
-        my_gear[tunic] = "tunic"
-        weapon = int(re.sub("[^0-9]", "", my_player['weapon']))
-        my_gear[weapon] = "weapon"
-        for item in my_gear:
-            if item < ( itm_lvl - itm_diff):
-                if cash > itm_cost:
-                    weechat.prnt(SCRIPTBUFFER, "%sBuying new %s from the shop..." % (weechat.color("cyan, black"), my_gear[item]))
-                    weechat.prnt(SCRIPTBUFFER, "")
-                    weechat.command(BOTBUFFER, "bank withdraw %s" % itm_cost)
-                    weechat.command(BOTBUFFER, "buy %s %s" % (my_gear[item], itm_lvl))
-                    cash = cash - itm_cost
-    return cash
+    for item in equipment:
+        my_gear[item] = int(re.sub("[^0-9]", "", my_player[item]))
+    lowest = min(my_gear, key=my_gear.get)
+    max_item = int(my_player['level']) * 2
+    item_price = max_item * 3
+    difference = max_item - my_gear[lowest]
+    upgrade_price = difference * 20
+    if int(my_player['level']) > 14 and int(my_player['sum']) < max_item * 10:
+        weechat.prnt(SCRIPTBUFFER, "Lowest item is %s, %s points." % (lowest, my_gear[lowest]))
+        weechat.prnt(SCRIPTBUFFER, "This is %s points less than the %s you can buy." % (difference, lowest))
+        weechat.prnt(SCRIPTBUFFER, "%s point %s costs %s" % (max_item, lowest, item_price))
+        weechat.prnt(SCRIPTBUFFER, "To upgrade your %s %s points costs %s" % (lowest, difference, upgrade_price))
+        weechat.prnt(SCRIPTBUFFER, "")
+        if cash > item_price and int(my_player['engineer']) == 1:
+            weechat.prnt(SCRIPTBUFFER, "%sBuying new %s from the shop..." % (weechat.color("cyan, black"), lowest))
+            weechat.prnt(SCRIPTBUFFER, "")
+            weechat.command(BOTBUFFER, "bank withdraw %s" % item_price)
+            weechat.command(BOTBUFFER, "buy %s %s" % (lowest, max_item))
+            cash = cash - item_price
+    return cash, lowest
 
 def hire_sidekicks(my_player, cash):
     """ sidekicks """
-    eng_hire_lvl = 24
-    if int(my_player['level']) > eng_hire_lvl:
+    if int(my_player['level']) > 14:
         if int(my_player['englevel']) < 9:
-            if int(my_player['engineer']) == 0 and cash > 2000:
+            if int(my_player['engineer']) == 0 and cash > 1000:
                 hireengineer()
-                cash = cash - 2000
+                cash = cash - 1000
             if int(my_player['engineer']) == 1 and cash > 200:
                 upengineer()
                 cash = cash - 200
@@ -542,7 +532,7 @@ def fighting(my_player, my_opponent):
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     """ parse messages """
     # display lines about me
-    if msg.startswith(MYNICK):
+    if msg.startswith(nickname):
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
     # return
@@ -551,7 +541,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.7.1'
+SCRIPT_VERSION = '8.8.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
@@ -561,9 +551,6 @@ MY_CONTENT = []
 ODDS = 0.9
 
 # The creeps and monsters lists show the level at which the script picks different opponents.
-# It's not clear what the optimal level to challenge at is, but looking at players who are
-# definitely not cheating, but frequently successful, it may be worth skipping some of them.
-
 creeps = {
         10: "bush",
         15: "locust",
@@ -612,8 +599,8 @@ weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCR
 
 # read configuration
 multirpg_config_init()
-MYNICK = weechat.config_string(MULTIRPG_CONFIG_OPTION['MYNICK'])
-IRCSERVER = weechat.config_string(MULTIRPG_CONFIG_OPTION['IRCSERVER'])
+nickname = weechat.config_string(MULTIRPG_CONFIG_OPTION['nickname'])
+irc_server = weechat.config_string(MULTIRPG_CONFIG_OPTION['irc_server'])
 
 # create script buffer
 SCRIPTBUFFER = weechat.buffer_new("weechat-multirpg", "buffer_input_cb", "", "buffer_close_cb", "")
@@ -638,7 +625,7 @@ weechat.prnt(SCRIPTBUFFER, "Script Version - %s" % SCRIPT_VERSION)
 weechat.prnt(SCRIPTBUFFER, "")
 
 # create channel buffer
-CHANBUFFER = weechat.info_get("irc_buffer", "%s, #multirpg" %(IRCSERVER))
+CHANBUFFER = weechat.info_get("irc_buffer", "%s, #multirpg" %(irc_server))
 
 # query bot
 weechat.command(CHANBUFFER, "/query multirpg")
@@ -658,7 +645,6 @@ CTRBAR = weechat.bar_new("mrpgbar", "off", "100", "window",
 get_rawplayers3("", "")
 
 # Set power potions to manual loading:
-
 weechat.prnt(SCRIPTBUFFER, "%sSetting Power Potion loading to manual..." % weechat.color("cyan, black"))
 weechat.prnt(SCRIPTBUFFER, "")
 weechat.command(BOTBUFFER, "load power 0")
