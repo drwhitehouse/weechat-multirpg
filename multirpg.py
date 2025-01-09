@@ -224,6 +224,8 @@ def refreshbar():
 def bar_time(my_time, my_time_now):
     """ get times for the bar """
     bar_time = my_time - my_time_now
+    if float(bar_time) < 0:
+        bar_time = 0
     bar_time = str(datetime.timedelta(seconds=int(bar_time)))
     return bar_time
 
