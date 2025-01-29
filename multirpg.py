@@ -187,10 +187,10 @@ def check_bet(all_players, my_player, cash):
     if int(my_player['level']) > 29:
         challenger, opponent, odds = bestbet(all_players)
         weechat.prnt(SCRIPTBUFFER, "%sBest bet: %s%s vs %s, odds: %s" % (weechat.color("yellow, black"),
-                                                                         weechat.color("white, black"),
-                                                                         challenger,
-                                                                         opponent,
-                                                                         odds))
+                                                                             weechat.color("white, black"),
+                                                                             challenger,
+                                                                             opponent,
+                                                                             odds))
         weechat.prnt(SCRIPTBUFFER, "")
         if int(my_player['bets']) < 5:
             cash = betting(challenger, opponent, cash)
@@ -201,9 +201,9 @@ def check_fight(all_players, my_player):
     if int(my_player['level']) > 9 and int(my_player['level']) < 200:
         my_opponent, odds = get_opponent(my_player, all_players, bet=False)
         weechat.prnt(SCRIPTBUFFER, "%sBest fight: %s%s, odds: %s" % (weechat.color("red, black"),
-                                                                     weechat.color("white, black"),
-                                                                     str(my_opponent),
-                                                                     str(odds)))
+                                                                         weechat.color("white, black"),
+                                                                         str(my_opponent),
+                                                                         str(odds)))
         weechat.prnt(SCRIPTBUFFER, "")
         if int(my_player['gold']) + int(my_player['bank']) > 239:
             return
@@ -248,10 +248,49 @@ def get_rawplayers3(data, timer):
         weechat.prnt(SCRIPTBUFFER, "")
         weechat.prnt(SCRIPTBUFFER, "/set multirpg.multirpg.nickname <nick>")
         weechat.prnt(SCRIPTBUFFER, "/set multirpg.multirpg.irc_server <ircserver>")
-        weechat.prnt(SCRIPTBUFFER, "/script reload multirpg")
         weechat.prnt(SCRIPTBUFFER, "/save")
+        weechat.prnt(SCRIPTBUFFER, "/script reload multirpg")
         weechat.prnt(SCRIPTBUFFER, "")
     return weechat.WEECHAT_RC_OK
+
+def my_display(my_player, lowest):
+    """ possibly display some stuff """
+    if random.randint(0, 1) and int(my_player['level']) > 40:
+        if random.randint(0, 1):
+            my_choices = ["1", "2", "3", "4", "5", "6"]
+            my_choice = random.choice(my_choices)
+            wins = int(my_player['bwon'])
+            losses = int(my_player['blost'])
+            total = wins + losses
+            if my_choice == "1":
+                weechat.prnt(SCRIPTBUFFER, "%sNext Item To Upgrade: %s%s" % (weechat.color("magenta, black"), weechat.color("white, black"), lowest))
+                weechat.prnt(SCRIPTBUFFER, "")
+            if my_choice == "2":
+                weechat.prnt(SCRIPTBUFFER, "%sBattles Won: %s%s" % (weechat.color("magenta, black"),
+                                                                    weechat.color("white, black"), wins))
+                weechat.prnt(SCRIPTBUFFER, "")
+            if my_choice == "3":
+                weechat.prnt(SCRIPTBUFFER, "%sBattles Lost: %s%s" % (weechat.color("magenta, black"),
+                                                                    weechat.color("white, black"), losses))
+                weechat.prnt(SCRIPTBUFFER, "")
+            if my_choice == "4":
+                percentage = round((wins / total) * 100, 2)
+                weechat.prnt(SCRIPTBUFFER, "%sPercentage Won: %s%s %%" % (weechat.color("magenta, black"),
+                                                                         weechat.color("white, black"), percentage))
+                weechat.prnt(SCRIPTBUFFER, "")
+            if my_choice == "5":
+                percentage = round((losses / total) * 100, 2)
+                weechat.prnt(SCRIPTBUFFER, "%sPercentage Lost: %s%s %%" % (weechat.color("magenta, black"),
+                                                                          weechat.color("white, black"), percentage))
+                weechat.prnt(SCRIPTBUFFER, "")
+            if my_choice == "6":
+                weechat.prnt(SCRIPTBUFFER, "%sWins / Losses: %s%s %s/ %s%s" % (weechat.color("magenta, black"),
+                                                                               weechat.color("green, black"),
+                                                                               wins,
+                                                                               weechat.color("white, black"),
+                                                                               weechat.color("red, black"),
+                                                                               losses))
+                weechat.prnt(SCRIPTBUFFER, "")
 
 def rawplayers3_cb(data, command, rtncd, out, err):
     """ rawplayers3 callback """
@@ -269,6 +308,7 @@ def rawplayers3_cb(data, command, rtncd, out, err):
                 takeaction(my_player)
                 check_fight(all_players, my_player)
                 check_alignment(my_player)
+                my_display(my_player, lowest)
             else:
                 weechat.prnt(SCRIPTBUFFER, "%sWARNING: offline" % weechat.color("red, black"))
                 weechat.prnt(SCRIPTBUFFER, "")
@@ -369,6 +409,7 @@ def check_finances(my_player):
     return cash
 
 def inventory(my_player, cash):
+    """ check inventory & purchase upgrades """
     my_gear = {}
     for item in equipment:
         my_gear[item] = int(re.sub("[^0-9]", "", my_player[item]))
