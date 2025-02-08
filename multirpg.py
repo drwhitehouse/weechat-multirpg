@@ -232,13 +232,6 @@ def show_mrpgcounters(data, item, window):
     """ show counters for mrpgbar """
     return "".join(MY_CONTENT)
 
-def display_cb(data, command, rtncd, out, err):
-    """ display callback """
-    if out != "":
-        weechat.prnt(SCRIPTBUFFER, "%sDisplay..." % weechat.color("red, black"))
-        weechat.prnt(SCRIPTBUFFER, "")
-    return weechat.WEECHAT_RC_OK
-
 def get_rawplayers3(data, timer):
     """ get rawplayers3 from url """
     if nickname != "" and irc_server != "":
@@ -257,11 +250,12 @@ def my_display(my_player, lowest):
     """ possibly display some stuff """
     if random.randint(0, 1) and int(my_player['level']) > 40:
         if random.randint(0, 1):
-            my_choices = ["1", "2", "3", "4", "5", "6"]
+            my_choices = ["1", "2", "3", "4", "5", "6", "7"]
             my_choice = random.choice(my_choices)
             wins = int(my_player['bwon'])
             losses = int(my_player['blost'])
             total = wins + losses
+            my_gear = get_gear(my_player)
             if my_choice == "1":
                 weechat.prnt(SCRIPTBUFFER, "%sNext Item To Upgrade: %s%s" % (weechat.color("magenta, black"), weechat.color("white, black"), lowest))
                 weechat.prnt(SCRIPTBUFFER, "")
@@ -290,6 +284,13 @@ def my_display(my_player, lowest):
                                                                                weechat.color("white, black"),
                                                                                weechat.color("red, black"),
                                                                                losses))
+                weechat.prnt(SCRIPTBUFFER, "")
+            if my_choice == "7":
+                weechat.prnt(SCRIPTBUFFER, "%sEquipment:" % (weechat.color("magenta, black")))
+                weechat.prnt(SCRIPTBUFFER, "")
+                for item in my_gear:
+                    value = my_gear[item]
+                    weechat.prnt(SCRIPTBUFFER, "%s, %s" % (item, value))
                 weechat.prnt(SCRIPTBUFFER, "")
 
 def rawplayers3_cb(data, command, rtncd, out, err):
@@ -408,11 +409,15 @@ def check_finances(my_player):
                 cash = cash + 1
     return cash
 
-def inventory(my_player, cash):
-    """ check inventory & purchase upgrades """
+def get_gear(my_player):
     my_gear = {}
     for item in equipment:
         my_gear[item] = int(re.sub("[^0-9]", "", my_player[item]))
+    return my_gear
+
+def inventory(my_player, cash):
+    """ check inventory & purchase upgrades """
+    my_gear = get_gear(my_player)
     lowest = min(my_gear, key=my_gear.get)
     max_item = int(my_player['level']) * 2
     item_price = max_item * 3
@@ -561,7 +566,7 @@ def get_opponent(my_player, all_players, bet=False):
             keylist.sort()
         my_dude = candidates[keylist[0]]
         my_opponent = my_dude['char']
-        odds = float(my_effective_sum) / keylist[0]
+        odds = round(float(my_effective_sum) / keylist[0], 2)
         return my_opponent, odds
     return "no opponent", 0
 
@@ -573,9 +578,17 @@ def fighting(my_player, my_opponent):
 def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
     """ parse messages """
     # display lines about me
-    if msg.startswith(nickname):
+    stripped = weechat.string_remove_color(msg,"")
+    if stripped.startswith(nickname):
         weechat.prnt(SCRIPTBUFFER, msg)
         weechat.prnt(SCRIPTBUFFER, "")
+    if stripped.startswith("Next Event:"):
+        weechat.prnt(SCRIPTBUFFER, msg)
+        weechat.prnt(SCRIPTBUFFER, "")
+    for event in tournaments:
+        if stripped.startswith(event) and nickname in stripped:
+            weechat.prnt(SCRIPTBUFFER, msg)
+            weechat.prnt(SCRIPTBUFFER, "")
     # return
     return weechat.WEECHAT_RC_OK
 
@@ -633,6 +646,17 @@ equipment = [
         'shield',
         'tunic',
         'weapon'
+]
+
+tournaments = [
+        'Low-Level',
+        'Mid-Level',
+        'High-Level',
+        "Champion's League",
+        'Death Match',
+        'Gold Round',
+        'Item Round',
+        'Royal Tournament'
 ]
 
 # register the script
