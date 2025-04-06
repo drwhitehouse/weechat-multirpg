@@ -263,6 +263,7 @@ def my_display(my_player, lowest):
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "1":
                 weechat.prnt(SCRIPTBUFFER, "%sNext Item To Upgrade: %s%s" % (weechat.color("magenta, black"),
+                                                                             weechat.color("white, black"), lowest))
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "2":
                 weechat.prnt(SCRIPTBUFFER, "%sBattles Won: %s%s" % (weechat.color("magenta, black"),
