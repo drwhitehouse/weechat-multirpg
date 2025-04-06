@@ -250,14 +250,19 @@ def my_display(my_player, lowest):
     """ possibly display some stuff """
     if random.randint(0, 1) and int(my_player['level']) > 40:
         if random.randint(0, 1):
-            my_choices = ["1", "2", "3", "4", "5", "6", "7"]
+            my_choices = ["0", "1", "2", "3", "4", "5", "6", "7"]
             my_choice = random.choice(my_choices)
             wins = int(my_player['bwon'])
             losses = int(my_player['blost'])
             total = wins + losses
             my_gear = get_gear(my_player)
+            my_potions = my_player['powerpots']
+            if my_choice == "0":
+                weechat.prnt(SCRIPTBUFFER, "%sPower Potions: %s%s" % (weechat.color("magenta, black"),
+                                                                      weechat.color("white, black"), my_potions))
+                weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "1":
-                weechat.prnt(SCRIPTBUFFER, "%sNext Item To Upgrade: %s%s" % (weechat.color("magenta, black"), weechat.color("white, black"), lowest))
+                weechat.prnt(SCRIPTBUFFER, "%sNext Item To Upgrade: %s%s" % (weechat.color("magenta, black"),
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "2":
                 weechat.prnt(SCRIPTBUFFER, "%sBattles Won: %s%s" % (weechat.color("magenta, black"),
@@ -265,25 +270,23 @@ def my_display(my_player, lowest):
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "3":
                 weechat.prnt(SCRIPTBUFFER, "%sBattles Lost: %s%s" % (weechat.color("magenta, black"),
-                                                                    weechat.color("white, black"), losses))
+                                                                     weechat.color("white, black"), losses))
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "4":
                 percentage = round((wins / total) * 100, 2)
                 weechat.prnt(SCRIPTBUFFER, "%sPercentage Won: %s%s %%" % (weechat.color("magenta, black"),
-                                                                         weechat.color("white, black"), percentage))
+                                                                          weechat.color("white, black"), percentage))
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "5":
                 percentage = round((losses / total) * 100, 2)
                 weechat.prnt(SCRIPTBUFFER, "%sPercentage Lost: %s%s %%" % (weechat.color("magenta, black"),
-                                                                          weechat.color("white, black"), percentage))
+                                                                           weechat.color("white, black"), percentage))
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "6":
-                weechat.prnt(SCRIPTBUFFER, "%sWins / Losses: %s%s %s/ %s%s" % (weechat.color("magenta, black"),
-                                                                               weechat.color("green, black"),
-                                                                               wins,
-                                                                               weechat.color("white, black"),
-                                                                               weechat.color("red, black"),
-                                                                               losses))
+                weechat.prnt(SCRIPTBUFFER, "%sWins / Losses: %s %s / %s" % (weechat.color("magenta, black"),
+                                                                            weechat.color("white, black"),
+                                                                            wins,
+                                                                            losses))
                 weechat.prnt(SCRIPTBUFFER, "")
             if my_choice == "7":
                 weechat.prnt(SCRIPTBUFFER, "%sEquipment:" % (weechat.color("magenta, black")))
@@ -595,7 +598,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.8.0'
+SCRIPT_VERSION = '8.8.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
