@@ -419,7 +419,7 @@ def inventory(my_player, cash):
     if item_price > upgrade_price:
         return cash, lowest
     if int(my_player['sum']) < max_item * 10:
-        weechat.prnt(SCRIPTBUFFER, f"Lowest item is {lowest}, {my_gear['lowest']} points.")
+        weechat.prnt(SCRIPTBUFFER, f"Lowest item is {lowest}, {my_gear[lowest]} points.")
         weechat.prnt(SCRIPTBUFFER, f"This is {difference} points less than a {lowest} you can buy from the shop.")
         weechat.prnt(SCRIPTBUFFER, f"A {max_item} point {lowest} costs {item_price}")
         weechat.prnt(SCRIPTBUFFER, f"Upgrading your {lowest} by {difference} points costs {upgrade_price}")
