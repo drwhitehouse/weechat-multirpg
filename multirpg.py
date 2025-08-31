@@ -71,34 +71,6 @@ def withdrawgold(withdrawl):
     weechat.command(BOTBUFFER, f"bank withdraw {withdrawl}")
     weechat.prnt(SCRIPTBUFFER, "")
 
-def hireengineer():
-    """ hire engineer """
-    weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Hiring engineer...")
-    weechat.prnt(SCRIPTBUFFER, "")
-    weechat.command(BOTBUFFER, "bank withdraw 1000")
-    weechat.command(BOTBUFFER, "hire engineer")
-
-def summonhero():
-    """ summon hero """
-    weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Summoning hero...")
-    weechat.prnt(SCRIPTBUFFER, "")
-    weechat.command(BOTBUFFER, "bank withdraw 1000")
-    weechat.command(BOTBUFFER, "summon hero")
-
-def upengineer():
-    """ upgrade engineer """
-    weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Upgrading engineer...")
-    weechat.prnt(SCRIPTBUFFER, "")
-    weechat.command(BOTBUFFER, "bank withdraw 200")
-    weechat.command(BOTBUFFER, "engineer level")
-
-def uphero():
-    """ upgrade hero """
-    weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Upgrading hero...")
-    weechat.prnt(SCRIPTBUFFER, "")
-    weechat.command(BOTBUFFER, "bank withdraw 200")
-    weechat.command(BOTBUFFER, "hero level")
-
 def get_creep(my_level):
     """ get creep for attack """
     these_creeps = creeps
@@ -137,9 +109,6 @@ def fight(my_player, my_opponent):
 def upgradeitems(my_player, cash):
     """ upgrade my stuff """
     my_pots = int(my_player['powerpots'])
-    # Not sure what is optimal here.
-    #if int(my_player['hlevel']) < 9:
-    #    return cash
     if int(my_player['bets']) < 5:
         return cash
     if int(my_player['gold']) > 41:
@@ -287,7 +256,7 @@ def my_display(my_player, lowest):
                 weechat.prnt(SCRIPTBUFFER, "")
                 for item in my_gear:
                     value = my_gear[item]
-                    weechat.prnt(SCRIPTBUFFER, f"{item}, {value}")
+                    weechat.prnt(SCRIPTBUFFER, f"{item}: {value}")
                 weechat.prnt(SCRIPTBUFFER, "")
 
 def rawplayers3_cb(data, command, rtncd, out, err):
@@ -420,7 +389,7 @@ def inventory(my_player, cash):
         return cash, lowest
     if int(my_player['sum']) < max_item * 10:
         weechat.prnt(SCRIPTBUFFER, f"Lowest item is {lowest}, {my_gear[lowest]} points.")
-        weechat.prnt(SCRIPTBUFFER, f"This is {difference} points less than a {lowest} you can buy from the shop.")
+        weechat.prnt(SCRIPTBUFFER, f"This is {difference} points less than the {lowest} you can buy from the shop.")
         weechat.prnt(SCRIPTBUFFER, f"A {max_item} point {lowest} costs {item_price}")
         weechat.prnt(SCRIPTBUFFER, f"Upgrading your {lowest} by {difference} points costs {upgrade_price}")
         weechat.prnt(SCRIPTBUFFER, "")
@@ -436,17 +405,29 @@ def hire_sidekicks(my_player, cash):
     if int(my_player['level']) > 14:
         if int(my_player['englevel']) < 9:
             if int(my_player['engineer']) == 0 and cash > 1000:
-                hireengineer()
+                weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Hiring engineer...")
+                weechat.prnt(SCRIPTBUFFER, "")
+                weechat.command(BOTBUFFER, "bank withdraw 1000")
+                weechat.command(BOTBUFFER, "hire engineer")
                 cash = cash - 1000
             if int(my_player['engineer']) == 1 and cash > 200:
-                upengineer()
+                weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Upgrading engineer...")
+                weechat.prnt(SCRIPTBUFFER, "")
+                weechat.command(BOTBUFFER, "bank withdraw 200")
+                weechat.command(BOTBUFFER, "engineer level")
                 cash = cash - 200
         elif int(my_player['hlevel']) < 9:
             if int(my_player['hero']) == 0 and cash > 1000:
-                summonhero()
+                weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Summoning hero...")
+                weechat.prnt(SCRIPTBUFFER, "")
+                weechat.command(BOTBUFFER, "bank withdraw 1000")
+                weechat.command(BOTBUFFER, "summon hero")
                 cash = cash - 1000
             if int(my_player['hero']) == 1 and cash > 200:
-                uphero()
+                weechat.prnt(SCRIPTBUFFER, f"{CYAN_BLACK}Upgrading hero...")
+                weechat.prnt(SCRIPTBUFFER, "")
+                weechat.command(BOTBUFFER, "bank withdraw 200")
+                weechat.command(BOTBUFFER, "hero level")
                 cash = cash - 200
     return cash
 
@@ -589,7 +570,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.8.3'
+SCRIPT_VERSION = '8.9.0'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
