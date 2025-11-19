@@ -140,9 +140,6 @@ def upgradeitems(my_player, cash):
 def upgradeitem(my_player, cash, lowest):
     """ upgrade my stuff """
     my_pots = int(my_player['powerpots'])
-    # Not sure what is optimal here.
-    #if int(my_player['hlevel']) < 9:
-    #    return cash
     if int(my_player['level']) < 15:
         return cash
     if int(my_player['level']) > 69 and my_pots < 5:
@@ -520,9 +517,10 @@ def get_real_sum(player):
 
 def get_opponent(my_player, all_players, bet=False):
     """ get opponent """
+    bonus = int(0.1 * int(my_player['sum']))
+    my_effective_sum = int(my_player['sum']) + bonus
     candidates = {}
     keylist = []
-    my_effective_sum = int(my_player['sum'])
     # Get all players my level or above who aren't me or on my team and key by rank.
     for player in all_players:
         this_player = all_players[player]
@@ -570,7 +568,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.9.0'
+SCRIPT_VERSION = '8.9.1'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
