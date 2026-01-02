@@ -518,7 +518,12 @@ def get_real_sum(player):
 def get_opponent(my_player, all_players, bet=False):
     """ get opponent """
     bonus = int(0.1 * int(my_player['sum']))
-    my_effective_sum = int(my_player['sum']) + bonus
+    if my_player['align'] == "g":
+        my_effective_sum = int(my_player['sum']) + bonus
+    elif my_player['align'] == "n":
+        my_effective_sum = int(my_player['sum'])
+    else:
+        my_effective_sum = int(my_player['sum']) - bonus
     candidates = {}
     keylist = []
     # Get all players my level or above who aren't me or on my team and key by rank.
@@ -568,7 +573,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.9.1'
+SCRIPT_VERSION = '8.9.3'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
