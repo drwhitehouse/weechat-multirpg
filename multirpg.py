@@ -448,36 +448,29 @@ def only_human(my_player):
 
 def takeaction(my_player):
     """ take action (attack / challenge / slay) """
-    Att_Now = False
-    Chg_Now = False
-    Sly_Now = False
-    Action = False
+    vows = False
     time_now = int(time.time())
     if int(my_player['level']) > 9 and time_now > int(my_player['regentm']):
-        Att_Now = True
-        Action = True
-    if int(my_player['level']) > 34 and time_now > int(my_player['challengetm']):
-        Chg_Now = True
-        Action = True
-    if int(my_player['level']) > 39 and time_now > int(my_player['slaytm']):
-        Sly_Now = True
-        Action = True
-    if Action:
         take_vows(my_player)
-        if Att_Now:
-            my_creep = get_creep(int(my_player["level"]))
-            weechat.prnt(SCRIPTBUFFER, f"{RED_BLACK}Attacking...")
-            weechat.prnt(SCRIPTBUFFER, "")
-            weechat.command(BOTBUFFER, f"attack {my_creep}")
-        if Chg_Now:
-            weechat.prnt(SCRIPTBUFFER, f"{RED_BLACK}Challenging...")
-            weechat.prnt(SCRIPTBUFFER, "")
-            weechat.command(BOTBUFFER, "challenge")
-        if Sly_Now:
-            my_monster = get_monster(int(my_player["sum"]))
-            weechat.prnt(SCRIPTBUFFER, f"{RED_BLACK}Slaying...")
-            weechat.prnt(SCRIPTBUFFER, "")
-            weechat.command(BOTBUFFER, f"slay {my_monster}")
+        vows = True
+        my_creep = get_creep(int(my_player["level"]))
+        weechat.prnt(SCRIPTBUFFER, f"{RED_BLACK}Attacking...")
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, f"attack {my_creep}")
+    if int(my_player['level']) > 34 and time_now > int(my_player['challengetm']):
+        if not vows:
+            take_vows(my_player)
+            vows = True
+        weechat.prnt(SCRIPTBUFFER, f"{RED_BLACK}Challenging...")
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, "challenge")
+    if int(my_player['level']) > 39 and time_now > int(my_player['slaytm']):
+        if not vows:
+            take_vows(my_player)
+        my_monster = get_monster(int(my_player["sum"]))
+        weechat.prnt(SCRIPTBUFFER, f"{RED_BLACK}Slaying...")
+        weechat.prnt(SCRIPTBUFFER, "")
+        weechat.command(BOTBUFFER, f"slay {my_monster}")
 
 def bestbet(all_players):
     """ get bet """
@@ -573,7 +566,7 @@ def msgparser(data, bufferp, tm, tags, display, is_hilight, prefix, msg):
 # initialise variables
 SCRIPT_NAME = 'multirpg'
 SCRIPT_AUTHOR = 'drwhitehouse and contributors'
-SCRIPT_VERSION = '8.9.3'
+SCRIPT_VERSION = '8.9.4'
 SCRIPT_LICENSE = 'GPL3'
 SCRIPT_DESC = 'fully automatic multirpg playing script'
 CONFIG_FILE_NAME = "multirpg"
